@@ -1,0 +1,24 @@
+card_index:
+    path:     /
+    defaults: { _controller: "AppBundle:Card:index" }
+    methods:  GET
+
+card_show:
+    path:     /{id}/show
+    defaults: { _controller: "AppBundle:Card:show" }
+    methods:  GET
+
+card_new:
+    path:     /new
+    defaults: { _controller: "AppBundle:Card:new" }
+    methods:  [GET, POST]
+
+card_edit:
+    path:     /{id}/edit
+    defaults: { _controller: "AppBundle:Card:edit" }
+    methods:  [GET, POST]
+
+card_delete:
+    path:     /{id}/delete
+    defaults: { _controller: "AppBundle:Card:delete" }
+    methods:  DELETE

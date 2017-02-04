@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <h1>Cards list</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Name</th>
+                <th>Shape</th>
+                <th>Size</th>
+                <th>Eventtype</th>
+                <th>Color</th>
+                <th>Language</th>
+                <th>Religion</th>
+                <th>Theme</th>
+                <th>Createdby</th>
+                <th>Createdat</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for card in cards %}
+            <tr>
+                <td><a href="{{ path('card_show', { 'id': card.id }) }}">{{ card.id }}</a></td>
+                <td>{{ card.name }}</td>
+                <td>{{ card.shape }}</td>
+                <td>{{ card.size }}</td>
+                <td>{{ card.eventType }}</td>
+                <td>{{ card.color }}</td>
+                <td>{{ card.language }}</td>
+                <td>{{ card.religion }}</td>
+                <td>{{ card.theme }}</td>
+                <td>{{ card.createdBy }}</td>
+                <td>{% if card.createdAt %}{{ card.createdAt|date('Y-m-d H:i:s') }}{% endif %}</td>
+                <td>
+                    <ul>
+                        <li>
+                            <a href="{{ path('card_show', { 'id': card.id }) }}">show</a>
+                        </li>
+                        <li>
+                            <a href="{{ path('card_edit', { 'id': card.id }) }}">edit</a>
+                        </li>
+                    </ul>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <ul>
+        <li>
+            <a href="{{ path('card_new') }}">Create a new card</a>
+        </li>
+    </ul>
+{% endblock %}
