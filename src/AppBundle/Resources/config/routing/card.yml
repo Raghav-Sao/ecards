@@ -1,7 +1,11 @@
+card_test:
+    path:     /test
+    defaults: { _controller: "AppBundle:Card:test" }
+    methods:  GET
 card_index:
     path:     /
     defaults: { _controller: "AppBundle:Card:index" }
-    methods:  GET
+    methods:  [GET, POST]
 
 card_show:
     path:     /{id}/show
@@ -11,12 +15,12 @@ card_show:
 card_new:
     path:     /new
     defaults: { _controller: "AppBundle:Card:new" }
-    methods:  [GET, POST]
+    methods:  [POST]
 
 card_edit:
     path:     /{id}/edit
     defaults: { _controller: "AppBundle:Card:edit" }
-    methods:  [GET, POST]
+    methods:  [PATCH]
 
 card_delete:
     path:     /{id}/delete

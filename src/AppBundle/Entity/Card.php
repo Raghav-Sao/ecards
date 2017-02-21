@@ -3,6 +3,7 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * Card
@@ -37,6 +38,7 @@ class Card
     {
         $this->sellerCardRelation = new ArrayCollection();
         $this->cardImage          = new ArrayCollection();
+        $this->createdAt          = new \DateTime();
 
     }
 
@@ -97,9 +99,9 @@ class Card
     private $theme;
 
     /**
-     * @var string
      *
-     * @ORM\Column(name="created_by", type="string", length=255)
+     * @ORM\ManyToOne(targetEntity="Seller")
+     * @ORM\JoinColumn(name="created_by", referencedColumnName="id")
      */
     private $createdBy;
 

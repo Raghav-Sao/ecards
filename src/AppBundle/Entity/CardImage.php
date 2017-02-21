@@ -29,9 +29,9 @@ class CardImage
     private $card;
 
     /**
-     * @var string
+     * @var array
      * @Assert\NotNull()
-     * @ORM\Column(name="url", type="string", length=510)
+     * @ORM\Column(name="url", type="array")
      */
     private $url;
 
@@ -80,7 +80,7 @@ class CardImage
     /**
      * Set url
      *
-     * @param string $url
+     * @param array $url
      *
      * @return CardImage
      */
@@ -94,7 +94,7 @@ class CardImage
     /**
      * Get url
      *
-     * @return string
+     * @return array
      */
     public function getUrl()
     {
