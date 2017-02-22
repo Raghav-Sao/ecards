@@ -26,7 +26,7 @@ class CardService Extends BaseService
 	public function __construct(Doctrine  $doctrine, $validator)
 	{
         parent::__construct($doctrine);
-        $this->validator = $validator;
+        $this->validator = $validator; 
 	}
 
 	/**
@@ -34,7 +34,6 @@ class CardService Extends BaseService
 	 */
 	public function getCard($id = null)
 	{
-		$id = 1;
 		if($id) {
 			$cards = $this->doctrine->getRepository('AppBundle:Card')->find($id);
         	// $cards       = $this->doctrine->getRepository('AppBundle:Card')->find(1);
@@ -72,23 +71,23 @@ class CardService Extends BaseService
 
         $request           = json_decode($request, true);
 
-		$validation_result =  self::validateCard($request);
-		if(!$validation_result["success"]){
-			return self::getResponse($validation_result);
+		$validationResult =  self::validateCard($request);
+		if(!$validationResult["success"]){
+			return self::getResponse($validationResult);
 		}
 
 		$card = new Card();
 		$card->setName($request['name']);
 		$card->setShape($request['shape']);
 		$card->setSize($request['size']);
-		$card->setEventType($request['event_type']);
+		$card->setEventType($request['eventType']);
 		$card->setColor($request['color']);
 		$card->setLanguage($request['language']);
 		$card->setReligion($request['religion']);
 		$card->setTheme($request['theme']);
 
-		$created_by = $this->doctrine->getRepository('AppBundle:Seller')->find($request['created_by']);
-		if(!$created_by) {
+		$createdBy = $this->doctrine->getRepository('AppBundle:Seller')->find($request['createdBy']);
+		if(!$createdBy) {
 			$result = [
 				"success" => false,
 				"result"  => "Invalid loged in User"
@@ -96,33 +95,33 @@ class CardService Extends BaseService
 			return self::getResponse($result);
 		}
 
-		$card->setCreatedBy($created_by);
+		$card->setCreatedBy($createdBy);
 		$em = $this->doctrine->getManager();
 		$em->persist($card);
 		
 
-		$card_img = new CardImage();
-		$card_img->setUrl($request['url']);
-		$card_img->setCard($card);
-		$card_img->setIsActive(true);
-		$em->persist($card_img);
+		$cardImg = new CardImage();
+		$cardImg->setUrl($request['url']);
+		$cardImg->setCard($card);
+		$cardImg->setIsActive(true);
+		$em->persist($cardImg);
 
-		$seller_card_relation = new SellerCardRelation();
-		$seller_card_relation->setCard($card);
-		$seller_card_relation->setSeller($created_by);
-		$seller_card_relation->setQuantity($request['quantity']);
-		$seller_card_relation->setPrice($request['price']);
-		$seller_card_relation->setPrintAvailable($request['print_available']);
-		$em->persist($seller_card_relation);
+		$sellerCardRelation = new SellerCardRelation();
+		$sellerCardRelation->setCard($card);
+		$sellerCardRelation->setSeller($createdBy);
+		$sellerCardRelation->setQuantity($request['quantity']);
+		$sellerCardRelation->setPrice($request['price']);
+		$sellerCardRelation->setPrintAvailable($request['printAvailable']);
+		$em->persist($sellerCardRelation);
 
 		$em->flush();
 
 		$result = [
 			'success'                 => true,
 			'msg'                     => 'Saved new product',
-			'card_id'                 => $card->getId(),
-			'img_id'                  => $card_img->getId(),
-			'seller_card_relation_id' => $seller_card_relation->getId()
+			'cardId'                 => $card->getId(),
+			'imgId'                  => $cardImg->getId(),
+			'sellerCardRelationId'   => $sellerCardRelation->getId()
 		];
 
 		return self::getResponse($result);
@@ -134,62 +133,77 @@ class CardService Extends BaseService
 
         $request           = json_decode($request, true);
 
-		$validation_result =  self::validateCard($request);
+		$validationResult =  self::validateCard($request);
 
 
 
-		if(!$validation_result["success"]){
-			return self::getResponse($validation_result);
+		if(!$validationResult["success"]){
+			return self::getResponse($validationResult);
 		}
 		
-		$em        = $this->doctrine->getManager();
-		$tableName = $em->getClassMetadata('AppBundle:Card')->getColumnName();
+		$em      = $this->doctrine->getManager();
+		// $tableName = $em->getClassMetadata('AppBundle:Card')->getColumnName();
 
-        $cards     = $this->doctrine->getRepository('AppBundle:Card')->find($id);
+        $card    = $this->doctrine->getRepository('AppBundle:Card')->find($id);
 
+        if(!$card) {
+			$result = [
+				"success" => false,
+				"msg"     => "invalid card id"
+			];
+			return self::getResponse($result);
+		}
 		$card->setName($request['name']);
 		$card->setShape($request['shape']);
 		$card->setSize($request['size']);
-		$card->setEventType($request['event_type']);
+		$card->setEventType($request['eventType']);
 		$card->setColor($request['color']);
 		$card->setLanguage($request['language']);
 		$card->setReligion($request['religion']);
 		$card->setTheme($request['theme']);
 
-		$created_by = $this->doctrine->getRepository('AppBundle:Seller')->find($request['created_by']);
-		if(!$created_by) {
+		$createdBy = $this->doctrine->getRepository('AppBundle:Seller')->find($request['createdBy']);
+		if(!$createdBy) {
 			$result = [
 				"success" => false,
-				"result"  => "Invalid loged in User"
+				"result"  => "Invalid Passed  User"
 			];
 			return self::getResponse($result);
 		}
 
-		$card->setCreatedBy($created_by);
+		$card->setCreatedBy($createdBy);
 		$em = $this->doctrine->getManager();
 		$em->persist($card);
 		
-		$card_img->setUrl($request['url']);
-		$card_img->setCard($card);
-		$card_img->setIsActive(true);
-		$em->persist($card_img);
+        $cardImage = $this->doctrine->getRepository('AppBundle:CardImage')->findOneByCard($card);
+        if(!$cardImage) {
+			$result = [
+				"success" => false,
+				"result"  => "Invalid Image id"
+			];
+			return self::getResponse($result);
+		}
+		$cardImage->setUrl($request['url']);
+		$cardImage->setCard($card);
+		$cardImage->setIsActive(true);
+		$em->persist($cardImage);
 
-		$seller_card_relation = new SellerCardRelation();
-		$seller_card_relation->setCard($card);
-		$seller_card_relation->setSeller($created_by);
-		$seller_card_relation->setQuantity($request['quantity']);
-		$seller_card_relation->setPrice($request['price']);
-		$seller_card_relation->setPrintAvailable($request['print_available']);
-		$em->persist($seller_card_relation);
+        $sellerCardRelation = $this->doctrine->getRepository('AppBundle:SellerCardRelation')->findOneByCard($card);
+		$sellerCardRelation->setSeller($createdBy);
+		$sellerCardRelation->setCard($card);
+		$sellerCardRelation->setQuantity($request['quantity']);
+		$sellerCardRelation->setPrice($request['price']);
+		$sellerCardRelation->setPrintAvailable($request['printAvailable']);
+		$em->persist($sellerCardRelation);
 
 		$em->flush();
 
 		$result = [
-			'success'                 => true,
-			'msg'                     => 'Saved new product',
-			'card_id'                 => $card->getId(),
-			'img_id'                  => $card_img->getId(),
-			'seller_card_relation_id' => $seller_card_relation->getId()
+			'success'              => true,
+			'msg'                  => 'Saved product',
+			'cardId'               => $card->getId(),
+			'imgId'                => $cardImage->getId(),
+			'sellerCardRelationId' => $sellerCardRelation->getId()
 		];
 
 		return self::getResponse($result);
@@ -210,31 +224,30 @@ class CardService Extends BaseService
 	public function validateCard($data)
 	{
 		$validated                      = true;
-		$card_params                    = array();
-		$card_params['name']            = gettype('abcd');
-		$card_params['price']           = getType(20.0);
-		$card_params['shape'] 	        = getType('abcd');
-		$card_params['size']  	        = getType('abcd');
-		$card_params['event_type']      = getType('abcd');
-		$card_params['color']           = getType('abcd');
-		$card_params['language']        = getType('abcd');
-		$card_params['religion']        = getType('abcd');
-		$card_params['theme']           = getType('abcd');
-		$card_params['created_by']      = getType(1);
-		$card_params['quantity']        = getType(1);
-		$card_params['price']           = getType(20);
-		$card_params['seller']          = getType(1);
-		$card_params['print_available'] = getType(true);
-		$card_params['url']             = getType([]);
+		$cardParams                    = array();
+		$cardParams['name']            = gettype('abcd');
+		$cardParams['price']           = getType(20.0);
+		$cardParams['shape'] 	        = getType('abcd');
+		$cardParams['size']  	        = getType('abcd');
+		$cardParams['eventType']      = getType('abcd');
+		$cardParams['color']           = getType('abcd');
+		$cardParams['language']        = getType('abcd');
+		$cardParams['religion']        = getType('abcd');
+		$cardParams['theme']           = getType('abcd');
+		$cardParams['createdBy']      = getType(1);
+		$cardParams['quantity']        = getType(1);
+		$cardParams['price']           = getType(20);
+		$cardParams['printAvailable'] = getType(true);
+		$cardParams['url']             = getType([]);
 
-		$validation_result = array();
-        foreach ($card_params as $key => $value) {
-        	if(!isset($data[$key]) || $card_params[$key] != getType($data[$key])){
-        		$validation_result[$key] = $card_params[$key];
+		$validationResult = array();
+        foreach ($cardParams as $key => $value) {
+        	if(!isset($data[$key]) || $cardParams[$key] != getType($data[$key])){
+        		$validationResult[$key] = $cardParams[$key];
         	}
         }
         $result = "";
-        foreach ($validation_result as $key => $value) {
+        foreach ($validationResult as $key => $value) {
         	$result .= "$key should be $value,";
         }
 
@@ -260,46 +273,45 @@ class CardService Extends BaseService
 	    if($result) {
 	    	$validated = false;
 	    }
-	    $validation_result = [
+	    $validationResult = [
 				"success" => $validated,
 				"result"  => $result
 			];
-		return $validation_result;
+		return $validationResult;
 	}
 
 	public function validateEditCard($data)
 	{
-		$validated                      = true;
-		$card_params                    = array();
-		$card_params['name']            = gettype('abcd');
-		$card_params['price']           = getType(20.0);
-		$card_params['shape'] 	        = getType('abcd');
-		$card_params['size']  	        = getType('abcd');
-		$card_params['event_type']      = getType('abcd');
-		$card_params['color']           = getType('abcd');
-		$card_params['language']        = getType('abcd');
-		$card_params['religion']        = getType('abcd');
-		$card_params['theme']           = getType('abcd');
-		$card_params['created_by']      = getType(1);
-		$card_params['quantity']        = getType(1);
-		$card_params['price']           = getType(20);
-		$card_params['seller']          = getType(1);
-		$card_params['print_available'] = getType(true);
-		$card_params['url']             = getType([]);
+		$validated                    = true;
+		$cardParams                   = array();
+		$cardParams['name']           = gettype('abcd');
+		$cardParams['price']          = getType(20.0);
+		$cardParams['shape'] 	      = getType('abcd');
+		$cardParams['size']  	      = getType('abcd');
+		$cardParams['eventType']      = getType('abcd');
+		$cardParams['color']          = getType('abcd');
+		$cardParams['language']       = getType('abcd');
+		$cardParams['religion']       = getType('abcd');
+		$cardParams['theme']          = getType('abcd');
+		$cardParams['createdBy']      = getType(1);
+		$cardParams['quantity']       = getType(1);
+		$cardParams['price']          = getType(20);
+		$cardParams['printAvailable'] = getType(true);
+		$cardParams['url']            = getType([]);
 
-		$validation_result    = array();
+		$validationResult     = array();
 		$is_atleast_one_param = false;
-        foreach ($card_params as $key => $value) {
+        foreach ($cardParams as $key => $value) {
 
         	if(isset($data[$key])){ 
-        		if($card_params[$key] != getType($data[$key])){
-        			$validation_result[$key] = $card_params[$key];
+        		if($cardParams[$key] != getType($data[$key])){
+        			$validationResult[$key] = $cardParams[$key];
         		}
         		$is_atleast_one_param = true;
         	} 
         }
         $result = "";
-        foreach ($validation_result as $key => $value) {
+        foreach ($validationResult as $key => $value) {
         	$result .= "$key should be $value,";
         }
 
@@ -310,11 +322,11 @@ class CardService Extends BaseService
 	    if($result) {
 	    	$validated = false;
 	    }
-	    $validation_result = [
+	    $validationResult = [
 				"success" => $validated,
 				"result"  => $result
 			];
-		return $validation_result;
+		return $validationResult;
 	}
 }
 

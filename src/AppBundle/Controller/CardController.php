@@ -4,7 +4,6 @@ namespace AppBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 
 
 /**
@@ -13,7 +12,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class CardController extends Controller
 {
-     public function testAction()
+    public function testAction()
     {
         return $this->render('AppBundle:Default:index.html.twig');
     }
@@ -35,7 +34,7 @@ class CardController extends Controller
      */
     public function showAction($id)
     {
-        
+
         $cards     = $this->container->get('app_bundle.card_service')->getCard($id);
 
         return $cards;
@@ -56,9 +55,9 @@ class CardController extends Controller
      * Displays a form to edit an existing card entity.
      *
      */
-    public function editAction(Request $request)
+    public function editAction($id, Request $request)
     { 
-        $response = $this->container->get('app_bundle.card_service')->newCard($request);
+        $response = $this->container->get('app_bundle.card_service')->editCard($id, $request);
         return $response;   
     }
 

@@ -4,10 +4,12 @@ namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping                    as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * CardImage
  *
+ * @UniqueEntity("card")
  * @ORM\Table(name="card_image")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\CardImageRepository")
  */
@@ -23,6 +25,7 @@ class CardImage
     private $id;
 
     /**
+     * 
      * @ORM\ManyToOne(targetEntity="Card", inversedBy="cardImage")
      * @ORM\JoinColumn(name="card_id", referencedColumnName="id")
      */

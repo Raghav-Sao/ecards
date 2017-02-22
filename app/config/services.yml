@@ -12,3 +12,8 @@ services:
         arguments:
             - "@doctrine"
             - "@validator"
+    app_bundle.seller_service:
+        class:         AppBundle\Services\SellerService
+        arguments:
+            - "@doctrine"
+            - "@validator"

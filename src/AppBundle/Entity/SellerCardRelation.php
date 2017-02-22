@@ -3,10 +3,12 @@
 namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * SellerCardRelation
  *
+ * @UniqueEntity("card")
  * @ORM\Table(name="seller_card_relation")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\SellerCardRelationRepository")
  */
@@ -189,11 +191,11 @@ class SellerCardRelation
     /**
      * Set card
      *
-     * @param \AppBundle\Entity\Card $card
+     * @param  $Card
      *
      * @return SellerCardRelation
      */
-    public function setCard(\AppBundle\Entity\Card $card = null)
+    public function setCard(Card $card = null)
     {
         $this->card = $card;
 

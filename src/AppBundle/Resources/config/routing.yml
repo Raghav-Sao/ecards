@@ -1,4 +1,7 @@
 app_card:
     resource: "@AppBundle/Resources/config/routing/card.yml"
     prefix:   /card
+app_seller:
+    resource: "@AppBundle/Resources/config/routing/seller.yml"
+    prefix:   /seller
 
