@@ -80,14 +80,14 @@ class CardService Extends BaseService
 		$card->setName($request['name']);
 		$card->setShape($request['shape']);
 		$card->setSize($request['size']);
-		$card->setEventType($request['eventType']);
+		$card->setEventType($request['event_type']);
 		$card->setColor($request['color']);
 		$card->setLanguage($request['language']);
 		$card->setReligion($request['religion']);
 		$card->setTheme($request['theme']);
 
-		$createdBy = $this->doctrine->getRepository('AppBundle:Seller')->find($request['createdBy']);
-		if(!$createdBy) {
+		$created_by = $this->doctrine->getRepository('AppBundle:Seller')->find($request['created_by']);
+		if(!$created_by) {
 			$result = [
 				"success" => false,
 				"result"  => "Invalid loged in User"
@@ -95,7 +95,7 @@ class CardService Extends BaseService
 			return self::getResponse($result);
 		}
 
-		$card->setCreatedBy($createdBy);
+		$card->setCreatedBy($created_by);
 		$em = $this->doctrine->getManager();
 		$em->persist($card);
 		
@@ -108,10 +108,10 @@ class CardService Extends BaseService
 
 		$sellerCardRelation = new SellerCardRelation();
 		$sellerCardRelation->setCard($card);
-		$sellerCardRelation->setSeller($createdBy);
+		$sellerCardRelation->setSeller($created_by);
 		$sellerCardRelation->setQuantity($request['quantity']);
 		$sellerCardRelation->setPrice($request['price']);
-		$sellerCardRelation->setPrintAvailable($request['printAvailable']);
+		$sellerCardRelation->setPrintAvailable($request['print_available']);
 		$em->persist($sellerCardRelation);
 
 		$em->flush();
@@ -156,14 +156,14 @@ class CardService Extends BaseService
 		$card->setName($request['name']);
 		$card->setShape($request['shape']);
 		$card->setSize($request['size']);
-		$card->setEventType($request['eventType']);
+		$card->setEventType($request['event_type']);
 		$card->setColor($request['color']);
 		$card->setLanguage($request['language']);
 		$card->setReligion($request['religion']);
 		$card->setTheme($request['theme']);
 
-		$createdBy = $this->doctrine->getRepository('AppBundle:Seller')->find($request['createdBy']);
-		if(!$createdBy) {
+		$created_by = $this->doctrine->getRepository('AppBundle:Seller')->find($request['created_by']);
+		if(!$created_by) {
 			$result = [
 				"success" => false,
 				"result"  => "Invalid Passed  User"
@@ -171,7 +171,7 @@ class CardService Extends BaseService
 			return self::getResponse($result);
 		}
 
-		$card->setCreatedBy($createdBy);
+		$card->setCreatedBy($created_by);
 		$em = $this->doctrine->getManager();
 		$em->persist($card);
 		
@@ -189,11 +189,11 @@ class CardService Extends BaseService
 		$em->persist($cardImage);
 
         $sellerCardRelation = $this->doctrine->getRepository('AppBundle:SellerCardRelation')->findOneByCard($card);
-		$sellerCardRelation->setSeller($createdBy);
+		$sellerCardRelation->setSeller($created_by);
 		$sellerCardRelation->setCard($card);
 		$sellerCardRelation->setQuantity($request['quantity']);
 		$sellerCardRelation->setPrice($request['price']);
-		$sellerCardRelation->setPrintAvailable($request['printAvailable']);
+		$sellerCardRelation->setPrintAvailable($request['print_available']);
 		$em->persist($sellerCardRelation);
 
 		$em->flush();
@@ -229,15 +229,15 @@ class CardService Extends BaseService
 		$cardParams['price']           = getType(20.0);
 		$cardParams['shape'] 	        = getType('abcd');
 		$cardParams['size']  	        = getType('abcd');
-		$cardParams['eventType']      = getType('abcd');
+		$cardParams['event_type']      = getType('abcd');
 		$cardParams['color']           = getType('abcd');
 		$cardParams['language']        = getType('abcd');
 		$cardParams['religion']        = getType('abcd');
 		$cardParams['theme']           = getType('abcd');
-		$cardParams['createdBy']      = getType(1);
+		$cardParams['created_by']      = getType(1);
 		$cardParams['quantity']        = getType(1);
 		$cardParams['price']           = getType(20);
-		$cardParams['printAvailable'] = getType(true);
+		$cardParams['print_available'] = getType(true);
 		$cardParams['url']             = getType([]);
 
 		$validationResult = array();
@@ -288,15 +288,15 @@ class CardService Extends BaseService
 		$cardParams['price']          = getType(20.0);
 		$cardParams['shape'] 	      = getType('abcd');
 		$cardParams['size']  	      = getType('abcd');
-		$cardParams['eventType']      = getType('abcd');
+		$cardParams['event_type']      = getType('abcd');
 		$cardParams['color']          = getType('abcd');
 		$cardParams['language']       = getType('abcd');
 		$cardParams['religion']       = getType('abcd');
 		$cardParams['theme']          = getType('abcd');
-		$cardParams['createdBy']      = getType(1);
+		$cardParams['created_by']      = getType(1);
 		$cardParams['quantity']       = getType(1);
 		$cardParams['price']          = getType(20);
-		$cardParams['printAvailable'] = getType(true);
+		$cardParams['print_available'] = getType(true);
 		$cardParams['url']            = getType([]);
 
 		$validationResult     = array();
