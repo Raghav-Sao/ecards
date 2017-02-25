@@ -1,3 +1,7 @@
+login:
+    resource: "@LoginBundle/Resources/config/routing.yml"
+    prefix:   /
+
 app_card:
     resource: "@AppBundle/Resources/config/routing.yml"
     prefix:   /

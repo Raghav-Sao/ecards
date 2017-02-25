@@ -17,3 +17,8 @@ services:
         arguments:
             - "@doctrine"
             - "@validator"
+    login_bundle.login_service:
+        class:         LoginBundle\Services\LoginService
+        arguments:
+            - "@doctrine"
+            - "@validator"

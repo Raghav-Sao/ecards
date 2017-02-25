@@ -9,6 +9,7 @@ use AppBundle\Entity\SellerCardRelation;
 use Doctrine\Bundle\DoctrineBundle\Registry as Doctrine;
 use JMS;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraint;
 // use AppBundle\Exception\NotFoundHttpException;
@@ -65,7 +66,7 @@ class CardService Extends BaseService
         return $response;
 	}
 
-	public function newCard($request)
+	public function newCard(Request $request)
 	{
 		$request           = $request->getContent();
 
@@ -127,7 +128,7 @@ class CardService Extends BaseService
 		return self::getResponse($result);
 	}
 
-	public function editCard($id, $request)
+	public function editCard(int $id, Request $request)
 	{
 		$request           = $request->getContent();
 
