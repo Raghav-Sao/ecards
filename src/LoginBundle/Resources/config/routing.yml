@@ -1,7 +1,7 @@
 login_signin:
     path     : /signin
     defaults : {_controller: "LoginBundle:Login:signin"}
-    methods  : POST 
+    methods  : [POST,GET]
 
 login_signup:
     path     : /signup

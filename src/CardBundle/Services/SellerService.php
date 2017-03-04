@@ -1,16 +1,16 @@
 <?php
 
-namespace AppBundle\Services;
+namespace CardBundle\Services;
 
-use AppBundle\Entity\Seller;
+use CardBundle\Entity\Seller;
 
 use Doctrine\Bundle\DoctrineBundle\Registry as Doctrine;
 use JMS;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraint;
-// use AppBundle\Exception\NotFoundHttpException;
-use AppBundle\Exception\NotFoundException;
+// use CardBundle\Exception\NotFoundHttpException;
+use CardBundle\Exception\NotFoundException;
 // use Symfony\Component\Validator\Constraints\DateTime;
 
 
@@ -33,10 +33,10 @@ class SellerService Extends BaseService
 	public function getSeller($id = null)
 	{
 		if($id) {
-			$seller = $this->doctrine->getRepository('AppBundle:Seller')->find($id);
+			$seller = $this->doctrine->getRepository('CardBundle:Seller')->find($id);
         	
 		} else{
-        	$seller       = $this->doctrine->getRepository('AppBundle:Seller')->findAll();
+        	$seller       = $this->doctrine->getRepository('CardBundle:Seller')->findAll();
 		}
 		
 		if(!$seller) {
@@ -110,7 +110,7 @@ class SellerService Extends BaseService
 		}
 		
 		$em     = $this->doctrine->getManager();
-        $seller = $this->doctrine->getRepository('AppBundle:Seller')->find($id);
+        $seller = $this->doctrine->getRepository('CardBundle:Seller')->find($id);
 
         if(!$seller) {
 			$result = [

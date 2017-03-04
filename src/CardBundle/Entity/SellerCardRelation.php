@@ -1,8 +1,9 @@
 <?php
 
-namespace AppBundle\Entity;
+namespace CardBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
@@ -10,7 +11,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  *
  * @UniqueEntity("card")
  * @ORM\Table(name="seller_card_relation")
- * @ORM\Entity(repositoryClass="AppBundle\Repository\SellerCardRelationRepository")
+ * @ORM\Entity(repositoryClass="CardBundle\Repository\SellerCardRelationRepository")
  */
 class SellerCardRelation
 {
@@ -53,9 +54,37 @@ class SellerCardRelation
     /**
      * @var bool
      *
-     * @ORM\Column(name="printAvailable", type="boolean")
+     * @ORM\Column(name="print_available", type="boolean")
      */
     private $printAvailable;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="printing_charge", type="float")
+     */
+    private $printingCharge;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="extra_charge", type="float")
+     */
+    private $extraCharge;
+
+    /**
+     * @var float
+     *
+     * @ORM\Column(name="tax_percentage", type="float")
+     */
+    private $taxPercentage;
+
+    /**
+     * @var bool
+     * @Assert\NotNull()
+     * @ORM\Column(name="is_active", type="boolean")
+     */
+    private $isActive;
 
 
     /**
@@ -75,7 +104,7 @@ class SellerCardRelation
      *
      * @return SellerCardRelation
      */
-    public function setCardId($card)
+    public function setCard($card)
     {
         $this->card = $card;
 
@@ -141,6 +170,69 @@ class SellerCardRelation
     }
 
     /**
+     * Set printingCharge
+     *
+     * @return float
+     */
+    public function setPrintingCharge($printingCharge)
+    {
+        $this->printingCharge = $printingCharge;
+        return $this;
+    }
+
+    /**
+     * Get printingCharge
+     *
+     * @return float
+     */
+    public function getPrintingCharge()
+    {
+        return $this->price;
+    }
+
+    /**
+     * Set extraCharge
+     *
+     * @return float
+     */
+    public function setExtraCharge($extraCharge)
+    {
+        $this->extraCharge = $extraCharge;
+        return $this;
+    }
+
+    /**
+     * Get extraCharge
+     *
+     * @return float
+     */
+    public function getExtraCharge()
+    {
+        return $this->extraCharge;
+    }
+
+    /**
+     * Set taxPercentage
+     *
+     * @return float
+     */
+    public function setTaxPercentage($taxPercentage)
+    {
+        $this->taxPercentage = $taxPercentage;
+        return $this;
+    }
+
+    /**
+     * Get taxPercentage
+     *
+     * @return float
+     */
+    public function getTaxPercentage()
+    {
+        return $this->taxPercentage;
+    }
+
+    /**
      * Set quantity
      *
      * @param float $quantity
@@ -188,17 +280,28 @@ class SellerCardRelation
         return $this->printAvailable;
     }
 
+    
     /**
-     * Set card
+     * Set isActive
      *
-     * @param  $Card
+     * @param boolean $isActive
      *
-     * @return SellerCardRelation
+     * @return CardImage
      */
-    public function setCard(Card $card = null)
+    public function setIsActive($isActive)
     {
-        $this->card = $card;
+        $this->isActive = $isActive;
 
         return $this;
+    }
+
+    /**
+     * Get isActive
+     *
+     * @return bool
+     */
+    public function getIsActive()
+    {
+        return $this->isActive;
     }
 }

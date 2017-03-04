@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Controller;
+namespace CardBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,7 +18,7 @@ class SellerController extends Controller
      */
     public function indexAction()
     {
-        $sellers = $this->container->get('app_bundle.seller_service')->getSeller();
+        $sellers = $this->container->get('card_bundle.seller_service')->getSeller();
 
         return $sellers;
     }
@@ -30,7 +30,7 @@ class SellerController extends Controller
     public function showAction($id)
     {
 
-        $seller = $this->container->get('app_bundle.seller_service')->getSeller($id);
+        $seller = $this->container->get('card_bundle.seller_service')->getSeller($id);
 
         return $seller;
     }
@@ -41,7 +41,7 @@ class SellerController extends Controller
      */
     public function newAction(Request $request)
     {
-        $response = $this->container->get('app_bundle.seller_service')->newSeller($request);
+        $response = $this->container->get('card_bundle.seller_service')->newSeller($request);
         return $response;
 
     }
@@ -52,7 +52,7 @@ class SellerController extends Controller
      */
     public function editAction($id, Request $request)
     { 
-        $response = $this->container->get('app_bundle.seller_service')->editSeller($id, $request);
+        $response = $this->container->get('card_bundle.seller_service')->editSeller($id, $request);
         return $response;   
     }
 }

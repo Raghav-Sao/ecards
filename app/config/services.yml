@@ -7,18 +7,21 @@ services:
 #    service_name:
 #        class: AppBundle\Directory\ClassName
 #        arguments: ["@another_service_name", "plain_value", "%parameter_name%"]
-    app_bundle.card_service:
-        class:         AppBundle\Services\CardService
+    card_bundle.card_service:
+        class:         CardBundle\Services\CardService
         arguments:
             - "@doctrine"
             - "@validator"
-    app_bundle.seller_service:
-        class:         AppBundle\Services\SellerService
+            - "@=service('security.token_storage').getToken().getUser()"
+    card_bundle.seller_service:
+        class:         CardBundle\Services\SellerService
         arguments:
             - "@doctrine"
             - "@validator"
     login_bundle.login_service:
         class:         LoginBundle\Services\LoginService
         arguments:
+            - "@security.authorization_checker"
+            - "@service_container"
             - "@doctrine"
             - "@validator"

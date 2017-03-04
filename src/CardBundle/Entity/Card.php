@@ -1,15 +1,16 @@
 <?php
 
-namespace AppBundle\Entity;
+namespace CardBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Card
  *
  * @ORM\Table(name="card")
- * @ORM\Entity(repositoryClass="AppBundle\Repository\CardRepository")
+ * @ORM\Entity(repositoryClass="CardBundle\Repository\CardRepository")
  */
 class Card
 {
@@ -29,15 +30,9 @@ class Card
      */
     private $sellerCardRelation;
 
-    /**
-     * @ORM\OneToMany(targetEntity="CardImage", mappedBy="card")
-     */
-    private $cardImage;
-
     public function __construct()
     {
         $this->sellerCardRelation = new ArrayCollection();
-        $this->cardImage          = new ArrayCollection();
         $this->createdAt          = new \DateTime();
 
     }
@@ -97,6 +92,13 @@ class Card
      * @ORM\Column(name="theme", type="string", length=255)
      */
     private $theme;
+
+    /**
+     * @var array
+     * @Assert\NotNull()
+     * @ORM\Column(name="img_url", type="array")
+     */
+    private $imgUrl;
 
     /**
      *
@@ -313,6 +315,30 @@ class Card
     public function getTheme()
     {
         return $this->theme;
+    }
+
+    /**
+     * Set imgUrl
+     *
+     * @param array $imgUrl
+     *
+     * @return CardImage
+     */
+    public function setImgUrl($imgUrl)
+    {
+        $this->imgUrl = $imgUrl;
+
+        return $this;
+    }
+
+    /**
+     * Get imgUrl
+     *
+     * @return array
+     */
+    public function getImgUrl()
+    {
+        return $this->imgUrl;
     }
 
     /**

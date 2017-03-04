@@ -1,9 +1,9 @@
 <?php
 
-namespace AppBundle;
+namespace CardBundle;
 
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 
-class AppBundle extends Bundle
+class CardBundle extends Bundle
 {
 }

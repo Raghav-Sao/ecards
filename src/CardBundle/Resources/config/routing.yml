@@ -1,0 +1,7 @@
+card_card:
+    resource: "@CardBundle/Resources/config/routing/card.yml"
+    prefix:   /card
+card_seller:
+    resource: "@CardBundle/Resources/config/routing/seller.yml"
+    prefix:   /seller
+

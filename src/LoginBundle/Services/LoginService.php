@@ -2,10 +2,11 @@
 
 namespace LoginBundle\Services;
 
-use AppBundle\Services\BaseService;
+use CardBundle\Services\BaseService;
 
 use Doctrine\Bundle\DoctrineBundle\Registry as Doctrine;
 
+use Symfony\Component\DependencyInjection\ContainerInterface as ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
@@ -21,46 +22,76 @@ use LoginBundle\Entity\User;
 class LoginService Extends BaseService
 {
 	protected $validator;
-	public function __construct(Doctrine $doctrine, $validator)
+	public function __construct($authorization_checker, ContainerInterface $container, Doctrine $doctrine, $validator)
 	{
         parent::__construct($doctrine);
+
+        $this->authorization_checker = $authorization_checker;
+
+        $this->container = $container;
+
         $this->validator = $validator; 
 	}
 
 	public function Signin(Request $request)
 	{
-		// $em = $this->doctrine->getManager();
-
-		// $tableName = $em->getClassMetadata('LoginBundle:User')->getFieldNames();
-		// var_dump($tableName);die;
 		$session = $request->getSession();
 
-		$request = $request->getContent();
-        $request = json_decode($request, true);
-		
-		$session->clear();
+		if($request->getMethod() =='POST') {
+            $session->clear();
+			$usr= $this->container->get('security.token_storage')->getToken()->getUser();
 
-		$validationResult = self::validation($request,['email' => "string", "password" => "string"]);
+			$request = $request->getContent();
+	        $request = json_decode($request, true);
+
+			$validationResult = self::validation($request,['email' => "string", "password" => "string"]);
+			
+			if(!$validationResult["success"]){
+				return self::getResponse($validationResult);
+			}
+
+			$email    = $request['email'];
+			$password = $request['password'];
+		} 
+
+		elseif ($session->has('user')) {
+			$login    = $session->get('user');
+			$email    = $login->getEmail();
+			$password = $login->getPassword();
+		}
 		
-		if(!$validationResult["success"]){
-			return self::getResponse($validationResult);
+		else {
+			$result       = [
+				'success' => false,
+				'msg'     => "Invalid Request",
+			];
+			return self::getResponse($result);
 		}
 
-		$email    = $request['email'];
-		$password = $request['password'];
-
 		$user     = $this->doctrine->getRepository('LoginBundle:User');
-		$user     = $user->findOneBy(array('email' => $email, 'password' => $password));
-
+		$user     = $user->findOneBy(['email' => $email]);
+		
 		if(!$user) {
 			$result       = [
 				'success' => false,
-				'error'   => "Invalide UserId or Password"
+				'error'   => "Email is not Registered",
+				'email'   => $email,
 			];
-			self::Response($result);
+			return self::getResponse($result);
 		}
 
-		$user   = new User();
+		$isValid = $this->container->get('security.password_encoder')->isPasswordValid($user, $password);
+
+		if (!$isValid) {
+	        $result       = [
+				'success' => false,
+				'msg'     => "Wrong Password",
+				'email'   => $email,
+			];
+			return self::getResponse($result);
+		}
+
+      	$user   = new User();
 		$user->setEmail($email);
 		$user->setPassword($password);
 

@@ -1,7 +1,8 @@
 <?php
 
-namespace AppBundle\Services;
+namespace CardBundle\Services;
 use Doctrine\Bundle\DoctrineBundle\Registry as Doctrine;
+use Symfony\Component\DependencyInjection\ContainerAware;
 
 
 class BaseService

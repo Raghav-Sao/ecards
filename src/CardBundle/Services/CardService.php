@@ -1,10 +1,10 @@
 <?php
 
-namespace AppBundle\Services;
+namespace CardBundle\Services;
 
-use AppBundle\Entity\Card;
-use AppBundle\Entity\CardImage;
-use AppBundle\Entity\SellerCardRelation;
+use CardBundle\Entity\Card;
+use CardBundle\Entity\CardImage;
+use CardBundle\Entity\SellerCardRelation;
 
 use Doctrine\Bundle\DoctrineBundle\Registry as Doctrine;
 use JMS;
@@ -12,8 +12,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraint;
-// use AppBundle\Exception\NotFoundHttpException;
-use AppBundle\Exception\NotFoundException;
+// use CardBundle\Exception\NotFoundHttpException;
+use CardBundle\Exception\NotFoundException;
+use Symfony\Component\HttpFoundation\Session\Session;
+
 // use Symfony\Component\Validator\Constraints\DateTime;
 
 
@@ -24,10 +26,12 @@ use AppBundle\Exception\NotFoundException;
 class CardService Extends BaseService
 {
 	protected $validator;
-	public function __construct(Doctrine  $doctrine, $validator)
+	protected $currentUser;
+	public function __construct(Doctrine  $doctrine, $validator, $currentUser)
 	{
         parent::__construct($doctrine);
-        $this->validator = $validator; 
+        $this->validator = $validator;
+        $this->currentUser      = $currentUser;
 	}
 
 	/**
@@ -36,11 +40,10 @@ class CardService Extends BaseService
 	public function getCard($id = null)
 	{
 		if($id) {
-			$cards = $this->doctrine->getRepository('AppBundle:Card')->find($id);
-        	// $cards       = $this->doctrine->getRepository('AppBundle:Card')->find(1);
+			$cards = $this->doctrine->getRepository('CardBundle:Card')->find($id);
         	
 		} else{
-        	$cards       = $this->doctrine->getRepository('AppBundle:Card')->findAll();
+        	$cards       = $this->doctrine->getRepository('CardBundle:Card')->findAll();
 		}
 		
 		if(!$cards) {
@@ -68,10 +71,11 @@ class CardService Extends BaseService
 
 	public function newCard(Request $request)
 	{
-		$request           = $request->getContent();
-
-        $request           = json_decode($request, true);
-
+		$session          = $request->getSession();
+		$request          = $request->getContent();
+		
+		$request          = json_decode($request, true);
+		
 		$validationResult =  self::validateCard($request);
 		if(!$validationResult["success"]){
 			return self::getResponse($validationResult);
@@ -86,8 +90,14 @@ class CardService Extends BaseService
 		$card->setLanguage($request['language']);
 		$card->setReligion($request['religion']);
 		$card->setTheme($request['theme']);
+		$card->setImgUrl($request['img_url']);
 
-		$created_by = $this->doctrine->getRepository('AppBundle:Seller')->find($request['created_by']);
+		$user     = $session->get('user');
+        $userName = $user->getEmail();
+        $password = $user->getPassword();
+        var_dump($userName, $password, $this->currentUser);die;
+
+		$created_by = $this->doctrine->getRepository('CardBundle:Seller')->find($request['created_by']);
 		if(!$created_by) {
 			$result = [
 				"success" => false,
@@ -99,13 +109,6 @@ class CardService Extends BaseService
 		$card->setCreatedBy($created_by);
 		$em = $this->doctrine->getManager();
 		$em->persist($card);
-		
-
-		$cardImg = new CardImage();
-		$cardImg->setUrl($request['url']);
-		$cardImg->setCard($card);
-		$cardImg->setIsActive(true);
-		$em->persist($cardImg);
 
 		$sellerCardRelation = new SellerCardRelation();
 		$sellerCardRelation->setCard($card);
@@ -121,8 +124,7 @@ class CardService Extends BaseService
 			'success'                 => true,
 			'msg'                     => 'Saved new product',
 			'cardId'                 => $card->getId(),
-			'imgId'                  => $cardImg->getId(),
-			'sellerCardRelationId'   => $sellerCardRelation->getId()
+			// 'sellerCardRelationId'   => $sellerCardRelation->getId()
 		];
 
 		return self::getResponse($result);
@@ -143,9 +145,9 @@ class CardService Extends BaseService
 		}
 		
 		$em      = $this->doctrine->getManager();
-		// $tableName = $em->getClassMetadata('AppBundle:Card')->getColumnName();
+		// $tableName = $em->getClassMetadata('CardBundle:Card')->getColumnName();
 
-        $card    = $this->doctrine->getRepository('AppBundle:Card')->find($id);
+        $card    = $this->doctrine->getRepository('CardBundle:Card')->find($id);
 
         if(!$card) {
 			$result = [
@@ -162,8 +164,9 @@ class CardService Extends BaseService
 		$card->setLanguage($request['language']);
 		$card->setReligion($request['religion']);
 		$card->setTheme($request['theme']);
+		$card->setImgUrl($request['img_url']);
 
-		$created_by = $this->doctrine->getRepository('AppBundle:Seller')->find($request['created_by']);
+		$created_by = $this->doctrine->getRepository('CardBundle:Seller')->find($request['created_by']);
 		if(!$created_by) {
 			$result = [
 				"success" => false,
@@ -175,21 +178,8 @@ class CardService Extends BaseService
 		$card->setCreatedBy($created_by);
 		$em = $this->doctrine->getManager();
 		$em->persist($card);
-		
-        $cardImage = $this->doctrine->getRepository('AppBundle:CardImage')->findOneByCard($card);
-        if(!$cardImage) {
-			$result = [
-				"success" => false,
-				"result"  => "Invalid Image id"
-			];
-			return self::getResponse($result);
-		}
-		$cardImage->setUrl($request['url']);
-		$cardImage->setCard($card);
-		$cardImage->setIsActive(true);
-		$em->persist($cardImage);
 
-        $sellerCardRelation = $this->doctrine->getRepository('AppBundle:SellerCardRelation')->findOneByCard($card);
+        $sellerCardRelation = $this->doctrine->getRepository('CardBundle:SellerCardRelation')->findOneByCard($card);
 		$sellerCardRelation->setSeller($created_by);
 		$sellerCardRelation->setCard($card);
 		$sellerCardRelation->setQuantity($request['quantity']);
@@ -203,7 +193,6 @@ class CardService Extends BaseService
 			'success'              => true,
 			'msg'                  => 'Saved product',
 			'cardId'               => $card->getId(),
-			'imgId'                => $cardImage->getId(),
 			'sellerCardRelationId' => $sellerCardRelation->getId()
 		];
 
@@ -239,7 +228,7 @@ class CardService Extends BaseService
 		$cardParams['quantity']        = getType(1);
 		$cardParams['price']           = getType(20);
 		$cardParams['print_available'] = getType(true);
-		$cardParams['url']             = getType([]);
+		$cardParams['img_url']         = getType([]);
 
 		$validationResult = array();
         foreach ($cardParams as $key => $value) {
@@ -298,7 +287,7 @@ class CardService Extends BaseService
 		$cardParams['quantity']       = getType(1);
 		$cardParams['price']          = getType(20);
 		$cardParams['print_available'] = getType(true);
-		$cardParams['url']            = getType([]);
+		$cardParams['img_url']            = getType([]);
 
 		$validationResult     = array();
 		$is_atleast_one_param = false;

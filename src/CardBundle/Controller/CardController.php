@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Controller;
+namespace CardBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,7 +14,7 @@ class CardController extends Controller
 {
     public function testAction()
     {
-        return $this->render('AppBundle:Default:index.html.twig');
+        return $this->render('CardBundle:Default:index.html.twig');
     }
 
     /**
@@ -23,7 +23,7 @@ class CardController extends Controller
      */
     public function indexAction()
     {
-        $cards     = $this->container->get('app_bundle.card_service')->getCard();
+        $cards     = $this->container->get('card_bundle.card_service')->getCard();
 
         return $cards;
     }
@@ -35,7 +35,7 @@ class CardController extends Controller
     public function showAction($id)
     {
 
-        $cards     = $this->container->get('app_bundle.card_service')->getCard($id);
+        $cards     = $this->container->get('card_bundle.card_service')->getCard($id);
 
         return $cards;
     }
@@ -46,7 +46,9 @@ class CardController extends Controller
      */
     public function newAction(Request $request)
     {
-        $response = $this->container->get('app_bundle.card_service')->newCard($request);
+        $user = $this->get('security.token_storage')->getToken()->getUser();
+        var_dump($user);die;
+        $response = $this->container->get('card_bundle.card_service')->newCard($request);
         return $response;
 
     }
@@ -57,7 +59,7 @@ class CardController extends Controller
      */
     public function editAction($id, Request $request)
     { 
-        $response = $this->container->get('app_bundle.card_service')->editCard($id, $request);
+        $response = $this->container->get('card_bundle.card_service')->editCard($id, $request);
         return $response;   
     }
 

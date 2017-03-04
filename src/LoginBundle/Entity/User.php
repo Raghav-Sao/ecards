@@ -2,28 +2,25 @@
 
 namespace LoginBundle\Entity;
 
+use FOS\UserBundle\Model\User as BaseUser;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * User
- *
+ * @ORM\Entity
  * @ORM\Table(name="user")
- * @ORM\Entity(repositoryClass="LoginBundle\Repository\UserRepository")
  */
-class User
+class User extends BaseUser
 {
     /**
-     * @var int
-     *
-     * @ORM\Column(name="id", type="integer")
      * @ORM\Id
+     * @ORM\Column(type="integer")
      * @ORM\GeneratedValue(strategy="AUTO")
      */
-    private $id;
+    protected $id;
 
     public function __construct()
     {
-        $this->lastUpdatedAt = new \DateTime();
+        parent::__construct();
     }
 
     /**
@@ -43,41 +40,9 @@ class User
     /**
      * @var string
      *
-     * @ORM\Column(name="email", type="string", length=255, unique=true)
-     */
-    private $email;
-
-    /**
-     * @var string
-     *
-     * @ORM\Column(name="password", type="string", length=255)
-     */
-    private $password;
-
-    /**
-     * @var string
-     *
      * @ORM\Column(name="mobile_number", type="string", length=255)
      */
     private $mobileNumber;
-
-    /**
-     * @var \DateTime
-     *
-     * @ORM\Column(name="last_updated_at", type="datetime")
-     */
-    private $lastUpdatedAt;
-
-
-    /**
-     * Get id
-     *
-     * @return int
-     */
-    public function getId()
-    {
-        return $this->id;
-    }
 
     /**
      * Set firstName
@@ -128,54 +93,6 @@ class User
     }
 
     /**
-     * Set email
-     *
-     * @param string $email
-     *
-     * @return User
-     */
-    public function setEmail($email)
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    /**
-     * Get email
-     *
-     * @return string
-     */
-    public function getEmail()
-    {
-        return $this->email;
-    }
-
-    /**
-     * Set password
-     *
-     * @param string $password
-     *
-     * @return User
-     */
-    public function setPassword($password)
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-
-    /**
-     * Get password
-     *
-     * @return string
-     */
-    public function getPassword()
-    {
-        return $this->password;
-    }
-
-    /**
      * Set mobileNumber
      *
      * @param string $mobileNumber
@@ -198,29 +115,4 @@ class User
     {
         return $this->mobileNumber;
     }
-
-    /**
-     * Set lastUpdatedAt
-     *
-     * @param \DateTime $lastUpdatedAt
-     *
-     * @return User
-     */
-    public function setLastUpdatedAt($lastUpdatedAt)
-    {
-        $this->lastUpdatedAt = $lastUpdatedAt;
-
-        return $this;
-    }
-
-    /**
-     * Get lastUpdatedAt
-     *
-     * @return \DateTime
-     */
-    public function getLastUpdatedAt()
-    {
-        return $this->lastUpdatedAt;
-    }
 }
-

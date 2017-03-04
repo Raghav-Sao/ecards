@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Exception;
+namespace CardBundle\Exception;
 
 class NotFoundException extends \Exception
 {

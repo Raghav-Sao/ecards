@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Entity;
+namespace CardBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
  * Seller
  *
  * @ORM\Table(name="seller")
- * @ORM\Entity(repositoryClass="AppBundle\Repository\SellerRepository")
+ * @ORM\Entity(repositoryClass="CardBundle\Repository\SellerRepository")
  */
 class Seller
 {
