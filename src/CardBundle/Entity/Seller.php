@@ -22,6 +22,14 @@ class Seller
     private $id;
 
     /**
+     *
+     * @ORM\OneToOne(targetEntity = "LoginBundle\Entity\User")
+     * @ORM\JoinColumn(name = "user_id", referencedColumnName = "id")
+     *
+     */
+    private $User;
+
+    /**
      * @var string
      *
      * @ORM\Column(name="name", type="string", length=255)

@@ -37,5 +37,37 @@ Class LoginController Extends Controller
         return $response;	
 	}
 
+	/**
+	 *
+	 * Confirm-Signup
+	 */
+	public function ConfirmSignupAction($token)
+	{
+		$response = $this->container->get('login_bundle.login_service')->ConfirmSignup($token);
+        return $response;	
+	}
+
+	/**
+	 *
+	 * Confirm-Signup
+	 */
+	public function ConfirmChangePasswordAction($token)
+	{
+		$response = $this->container->get('login_bundle.login_service')->ConfirmChangePassword($token);
+        return $response;	
+	}
+
+	/**
+	 *
+	 * Reset confirmation
+	 */
+	public function ResendConfirmationTokenAction(Request $request)
+	{
+		$response = $this->container->get('login_bundle.login_service')->ResendConfirmationToken($request);
+        return $response;
+	}
+
+
+
 }
 

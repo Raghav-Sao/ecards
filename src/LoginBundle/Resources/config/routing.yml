@@ -1,14 +1,29 @@
 login_signin:
     path     : /signin
     defaults : {_controller: "LoginBundle:Login:signin"}
-    methods  : [POST,GET]
+    methods  : [GET, POST]
 
 login_signup:
     path     : /signup
     defaults : { _controller: "LoginBundle:Login:signup"}
-    methods  : POST
+    methods  : [POST]
 
 login_signout:
     path     : /signout
     defaults : { _controller: "LoginBundle:Login:signout"}
     methods  : ["GET", "POST"]
+
+login_registration_confirm:
+    path     : /register/confirm/{token}
+    defaults : { _controller: "LoginBundle:Login:ConfirmSignup"}
+    methods  : ["GET"]
+
+login__resetting_request:
+    path     : /resetting/request
+    defaults : { _controller: "LoginBundle:Login:ResendConfirmationToken"}
+    methods  : ["POST"]
+
+login_resetting_reset:
+    path     : /resetting/reset/{token}
+    defaults : { _controller: "LoginBundle:Login:ConfirmChangePassword"}
+    methods  : ["GET", POST"]

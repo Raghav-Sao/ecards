@@ -26,8 +26,8 @@ var params = {
 $(document).ready(function(){
   $("button").click(function(){
     $.ajax({
-            method: "POST",
-              url: "/card/new",
+            method: "GET",
+              url: "http://localhost:8000/register/confirm/X97PfAa0hva6sFqYBKTzzvFw6tw45g1DTvbwlfoJACc",
               data: JSON.stringify(params),
               datatype: "json",
             success: function (data) {
