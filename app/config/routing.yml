@@ -1,3 +1,8 @@
+app:
+    resource: "@AppBundle/Controller/"
+    type:     annotation
+    prefix:   /
+
 login:
     resource: "@LoginBundle/Resources/config/routing.yml"
     prefix:   /

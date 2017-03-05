@@ -18,6 +18,7 @@ class AppKernel extends Kernel
             new CardBundle\CardBundle(),
             new LoginBundle\LoginBundle(),
             new FOS\UserBundle\FOSUserBundle(),
+            new AppBundle\AppBundle(),
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {

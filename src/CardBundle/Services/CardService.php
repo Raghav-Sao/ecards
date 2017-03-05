@@ -2,24 +2,24 @@
 
 namespace CardBundle\Services;
 
+use AppBundle\Exception\NotFoundException;
+use AppBundle\Exception\BadRequestException;
+
 use CardBundle\Entity\Card;
 use CardBundle\Entity\CardImage;
 use CardBundle\Entity\SellerCardRelation;
 
+
+
 use Doctrine\Bundle\DoctrineBundle\Registry as Doctrine;
 use JMS;
+
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraint;
-// use CardBundle\Exception\NotFoundHttpException;
-use CardBundle\Exception\NotFoundException;
 use Symfony\Component\HttpFoundation\Session\Session;
 
-// use Symfony\Component\Validator\Constraints\DateTime;
-
-
-// use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 
 
@@ -48,7 +48,7 @@ class CardService Extends BaseService
 		
 		if(!$cards) {
 			$cards = [
-				"success" => false,
+				"success" => true,
 				"result"  => []
 			];
 		} else {
@@ -78,7 +78,7 @@ class CardService Extends BaseService
 		
 		$validationResult =  self::validateCard($request);
 		if(!$validationResult["success"]){
-			return self::getResponse($validationResult);
+			throw new BadRequestException($validationResult["result"]);
 		}
 
 		$card = new Card();
@@ -95,7 +95,7 @@ class CardService Extends BaseService
 		$user     = $session->get('user');
         $userName = $user->getEmail();
         $password = $user->getPassword();
-        var_dump($userName, $password, $this->currentUser);die;
+        var_dump($userName, $password, $this->currentUser, $user->getRoles());die;
 
 		$created_by = $this->doctrine->getRepository('CardBundle:Seller')->find($request['created_by']);
 		if(!$created_by) {
@@ -116,6 +116,10 @@ class CardService Extends BaseService
 		$sellerCardRelation->setQuantity($request['quantity']);
 		$sellerCardRelation->setPrice($request['price']);
 		$sellerCardRelation->setPrintAvailable($request['print_available']);
+		$sellerCardRelation->setPrintingCharge(0); //set it from parameter later
+		$sellerCardRelation->setExtraCharge(0); //set it from parameter later
+		$sellerCardRelation->setTaxPercentage(0); //set it from parameter later
+		$sellerCardRelation->setIsActive(1); //set it from parameter later
 		$em->persist($sellerCardRelation);
 
 		$em->flush();

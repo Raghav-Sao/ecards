@@ -1,13 +1,15 @@
 <?php
 
-namespace CardBundle\Exception;
+namespace AppBundle\Exception;
+
+use Symfony\Component\HttpFoundation\Response;
 
 class NotFoundException extends \Exception
 {
     public function __construct(
         string     $message    = '',
         array      $extra      = [],
-        string     $customCode = "NOT_FOUND",
+        string     $customCode = Response::HTTP_NOT_FOUND,
         int        $code       = 0,
         \Exception $previous   = null
     )

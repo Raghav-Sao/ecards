@@ -6,6 +6,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 
 
+
 /**
  * Card controller.
  *
@@ -47,7 +48,7 @@ class CardController extends Controller
     public function newAction(Request $request)
     {
         $user = $this->get('security.token_storage')->getToken()->getUser();
-        var_dump($user);die;
+        // var_dump($user);die;
         $response = $this->container->get('card_bundle.card_service')->newCard($request);
         return $response;
 
