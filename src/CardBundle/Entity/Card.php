@@ -102,7 +102,7 @@ class Card
 
     /**
      *
-     * @ORM\ManyToOne(targetEntity="Seller")
+     * @ORM\ManyToOne(targetEntity="LoginBundle\Entity\User")
      * @ORM\JoinColumn(name="created_by", referencedColumnName="id")
      */
     private $createdBy;

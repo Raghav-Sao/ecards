@@ -69,69 +69,141 @@ class CardService Extends BaseService
         return $response;
 	}
 
-	public function newCard(Request $request)
+	public function newSellerCard(Request $request)
 	{
-		$session          = $request->getSession();
-		$request          = $request->getContent();
+		$userRoles = $this->currentUser->getRoles()[0];
+		$params    = $request->getContent();
+        $params    = json_decode($params, true);
+
+		$card      = self::newCard($params);
+		$em = $this->doctrine->getManager();
+		$em->persist($card);
+		$seller    = self::getSeller($params);
+
+		var_dump($userRoles);;
+		switch ($userRoles) {
+
+			case 'SUPER_ADMIN':
+				if(!$seller)
+					break;
+
+			case 'ADMIN':
+				$sellerCardRelation = self::newSellerCardRelation($card, $seller, $params);
+				$em->persist($sellerCardRelation);
+				break;
+		}
 		
-		$request          = json_decode($request, true);
-		
-		$validationResult =  self::validateCard($request);
+		$em->flush();
+
+		$result = [
+			'success' => true,
+			'msg'     => 'Saved new product',
+			'cardId'  => $card->getId()
+		];
+
+		if($seller) {
+			$result['sellerCardRelationId'] = $sellerCardRelation->getId();
+		}
+
+		return self::getResponse($result);
+
+	}
+
+	public function newCard($params, $doSave = false)
+	{
+		$validationResult =  self::validateParams($params, self::getMandatoryCardParams());
+
 		if(!$validationResult["success"]){
 			throw new BadRequestException($validationResult["result"]);
 		}
 
 		$card = new Card();
-		$card->setName($request['name']);
-		$card->setShape($request['shape']);
-		$card->setSize($request['size']);
-		$card->setEventType($request['event_type']);
-		$card->setColor($request['color']);
-		$card->setLanguage($request['language']);
-		$card->setReligion($request['religion']);
-		$card->setTheme($request['theme']);
-		$card->setImgUrl($request['img_url']);
+		$card->setName($params['name']);
+		$card->setShape($params['shape']);
+		$card->setSize($params['size']);
+		$card->setEventType($params['event_type']);
+		$card->setColor($params['color']);
+		$card->setLanguage($params['language']);
+		$card->setReligion($params['religion']);
+		$card->setTheme($params['theme']);
+		$card->setImgUrl($params['img_url']);
 
-		$user     = $session->get('user');
-        $userName = $user->getEmail();
-        $password = $user->getPassword();
-        var_dump($userName, $password, $this->currentUser, $user->getRoles());die;
+		if(!$doSave) {
+			return $card;
+		}
+	}
 
-		$created_by = $this->doctrine->getRepository('CardBundle:Seller')->find($request['created_by']);
-		if(!$created_by) {
-			$result = [
-				"success" => false,
-				"result"  => "Invalid loged in User"
-			];
-			return self::getResponse($result);
+
+	/*
+	 * 
+	 *
+	 */
+	public function getSeller($params)
+	{
+		$validationResult =  self::validateParams($params, self::getMandatorySellerCardParams());
+		if(!$validationResult["success"]){
+			throw new BadRequestException($validationResult["result"]);
 		}
 
-		$card->setCreatedBy($created_by);
-		$em = $this->doctrine->getManager();
-		$em->persist($card);
+		$currentUser = $this->currentUser;
 
+		if(count($currentUser) < 1) {
+			throw new BadRequestException("Invalid User");
+		}
+
+		$currentUserRoles = $currentUser->getRoles()[0];
+
+		$sellerId = $params['seller_id']; // to-do : exception handling for unpassed seller_id
+		
+		if($sellerId) {
+			$seller   = $this->doctrine->getRepository('CardBundle:Seller')->find($sellerId);
+			
+			if(!$seller) {
+				throw new BadRequestException('Invalid param: seller_id passed.');	
+			}
+		}
+
+		switch ($currentUserRoles) {
+
+			case 'SUPER_ADMIN':
+				if(!$seller) {
+					return false;
+					break;
+				}
+
+			case 'ADMIN':
+				if(!$seller) {
+					throw new BadRequestException('seller_id is mandatory param');
+				}
+
+				return $seller;
+				break;
+			
+			default:
+				return $currentUser;
+				break;
+		}
+	}
+
+	public function newSellerCardRelation($card, $seller, $params, $doSave = false)
+	{
 		$sellerCardRelation = new SellerCardRelation();
 		$sellerCardRelation->setCard($card);
-		$sellerCardRelation->setSeller($created_by);
-		$sellerCardRelation->setQuantity($request['quantity']);
-		$sellerCardRelation->setPrice($request['price']);
-		$sellerCardRelation->setPrintAvailable($request['print_available']);
+		$sellerCardRelation->setSeller($seller);
+		$sellerCardRelation->setQuantity($params['quantity']);
+		$sellerCardRelation->setPrice($params['price']);
+		$sellerCardRelation->setPrintAvailable($params['print_available']);
 		$sellerCardRelation->setPrintingCharge(0); //set it from parameter later
 		$sellerCardRelation->setExtraCharge(0); //set it from parameter later
 		$sellerCardRelation->setTaxPercentage(0); //set it from parameter later
 		$sellerCardRelation->setIsActive(1); //set it from parameter later
-		$em->persist($sellerCardRelation);
 
-		$em->flush();
+		if($doSave) {
+			$em->persist($sellerCardRelation);
+			$em->flush();
+		}
 
-		$result = [
-			'success'                 => true,
-			'msg'                     => 'Saved new product',
-			'cardId'                 => $card->getId(),
-			// 'sellerCardRelationId'   => $sellerCardRelation->getId()
-		];
-
-		return self::getResponse($result);
+		return $sellerCardRelation;
 	}
 
 	public function editCard(int $id, Request $request)
@@ -140,7 +212,7 @@ class CardService Extends BaseService
 
         $request           = json_decode($request, true);
 
-		$validationResult =  self::validateCard($request);
+		$validationResult =  self::validateParams($request, self::getMandatoryCardParams());
 
 
 
@@ -215,31 +287,17 @@ class CardService Extends BaseService
         return $response;
 	}
 
-	public function validateCard($data)
+	public function validateParams($data, $mandatoryParams)
 	{
-		$validated                      = true;
-		$cardParams                    = array();
-		$cardParams['name']            = gettype('abcd');
-		$cardParams['price']           = getType(20.0);
-		$cardParams['shape'] 	        = getType('abcd');
-		$cardParams['size']  	        = getType('abcd');
-		$cardParams['event_type']      = getType('abcd');
-		$cardParams['color']           = getType('abcd');
-		$cardParams['language']        = getType('abcd');
-		$cardParams['religion']        = getType('abcd');
-		$cardParams['theme']           = getType('abcd');
-		$cardParams['created_by']      = getType(1);
-		$cardParams['quantity']        = getType(1);
-		$cardParams['price']           = getType(20);
-		$cardParams['print_available'] = getType(true);
-		$cardParams['img_url']         = getType([]);
-
+		$validated        = true;
 		$validationResult = array();
-        foreach ($cardParams as $key => $value) {
-        	if(!isset($data[$key]) || $cardParams[$key] != getType($data[$key])){
-        		$validationResult[$key] = $cardParams[$key];
+
+        foreach ($mandatoryParams as $key => $value) {
+        	if(!isset($data[$key]) || $mandatoryParams[$key] != getType($data[$key])){
+        		$validationResult[$key] = $mandatoryParams[$key];
         	}
         }
+
         $result = "";
         foreach ($validationResult as $key => $value) {
         	$result .= "$key should be $value,";
@@ -264,34 +322,37 @@ class CardService Extends BaseService
 		        $result .= "email is invalid";
 		    }
 	    }
+
 	    if($result) {
 	    	$validated = false;
 	    }
+
 	    $validationResult = [
 				"success" => $validated,
 				"result"  => $result
-			];
+		];
+
 		return $validationResult;
 	}
 
 	public function validateEditCard($data)
 	{
-		$validated                    = true;
-		$cardParams                   = array();
-		$cardParams['name']           = gettype('abcd');
-		$cardParams['price']          = getType(20.0);
-		$cardParams['shape'] 	      = getType('abcd');
-		$cardParams['size']  	      = getType('abcd');
+		$validated                     = true;
+		$cardParams                    = array();
+		$cardParams['name']            = gettype('abcd');
+		$cardParams['price']           = getType(20.0);
+		$cardParams['shape']           = getType('abcd');
+		$cardParams['size']            = getType('abcd');
 		$cardParams['event_type']      = getType('abcd');
-		$cardParams['color']          = getType('abcd');
-		$cardParams['language']       = getType('abcd');
-		$cardParams['religion']       = getType('abcd');
-		$cardParams['theme']          = getType('abcd');
+		$cardParams['color']           = getType('abcd');
+		$cardParams['language']        = getType('abcd');
+		$cardParams['religion']        = getType('abcd');
+		$cardParams['theme']           = getType('abcd');
 		$cardParams['created_by']      = getType(1);
-		$cardParams['quantity']       = getType(1);
-		$cardParams['price']          = getType(20);
+		$cardParams['quantity']        = getType(1);
+		$cardParams['price']           = getType(20);
 		$cardParams['print_available'] = getType(true);
-		$cardParams['img_url']            = getType([]);
+		$cardParams['img_url']         = getType([]);
 
 		$validationResult     = array();
 		$is_atleast_one_param = false;
@@ -321,6 +382,35 @@ class CardService Extends BaseService
 				"result"  => $result
 			];
 		return $validationResult;
+	}
+
+	public function getMandatoryCardParams()
+	{
+		$mandatoryCardParams                    = array();
+		$mandatoryCardParams['name']            = gettype('abcd');
+		$mandatoryCardParams['shape']           = getType('abcd');
+		$mandatoryCardParams['size']            = getType('abcd');
+		$mandatoryCardParams['event_type']      = getType('abcd');
+		$mandatoryCardParams['color']           = getType('abcd');
+		$mandatoryCardParams['language']        = getType('abcd');
+		$mandatoryCardParams['religion']        = getType('abcd');
+		$mandatoryCardParams['theme']           = getType('abcd');
+		$mandatoryCardParams['img_url']         = getType([]);
+		$mandatoryCardParams['created_by']      = getType(1);
+		$mandatoryCardParams['price']           = getType(20);
+		$mandatoryCardParams['print_available'] = getType(true);
+		$mandatoryCardParams['quantity']        = getType(1);
+		return $mandatoryCardParams;
+	}
+
+	public function getMandatorySellerCardParams()
+	{
+		$mandatorySellerCardParams                    = array();
+		$mandatorySellerCardParams['price']           = getType(20);
+		$mandatorySellerCardParams['print_available'] = getType(true);
+		$mandatorySellerCardParams['quantity']        = getType(1);
+
+		return $mandatorySellerCardParams;
 	}
 }
 

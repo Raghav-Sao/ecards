@@ -13,6 +13,9 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
+use Symfony\Component\Security\Http\Event\InteractiveLoginEvent;
+use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 
 
 
@@ -34,7 +37,7 @@ class LoginService Extends BaseService
 	public function Signin(Request $request)
 	{
 		$session = $request->getSession();
-
+		$newrequest = $request;
 		if($request->getMethod() =='POST') {
             $session->clear();
 			$usr= $this->container->get('security.token_storage')->getToken()->getUser();
@@ -99,11 +102,17 @@ class LoginService Extends BaseService
 			return self::getResponse($result);
 		}
 
-      	$user   = new User();
-		$user->setEmail($email);
-		$user->setPassword($password);
+
 
 		$session->set('user', $user);
+
+		$token = new UsernamePasswordToken($user, null, "main", $user->getRoles());
+		var_dump($token);
+		$this->container->get("security.token_storage")->setToken($token);
+	    $event = new InteractiveLoginEvent($newrequest, $token);
+	    $this->container->get("event_dispatcher")->dispatch("security.interactive_login", $event);
+
+
 		
 		$result       = [
 			'success' => true,
@@ -329,6 +338,7 @@ class LoginService Extends BaseService
 	{
 		$session = $request->getSession();
 		$session->clear();
+		$this->container->get("security.token_storage")->setToken(null);
 
 		$result = [
 			"success" => true,

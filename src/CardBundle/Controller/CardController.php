@@ -49,7 +49,7 @@ class CardController extends Controller
     {
         $user = $this->get('security.token_storage')->getToken()->getUser();
         // var_dump($user);die;
-        $response = $this->container->get('card_bundle.card_service')->newCard($request);
+        $response = $this->container->get('card_bundle.card_service')->newSellerCard($request);
         return $response;
 
     }
