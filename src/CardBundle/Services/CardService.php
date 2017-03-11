@@ -69,30 +69,39 @@ class CardService Extends BaseService
         return $response;
 	}
 
+
+	/**
+	 *
+	 * @param  {card} and {seller optional for ROLE_SUPER_ADMIN and self for ROLE_ADMIN} params
+	 * 
+	 * @return return [{card->id} and {seller->id if seller generate else seller->id will not returned}
+	 */
 	public function newSellerCard(Request $request)
 	{
 		$userRoles = $this->currentUser->getRoles()[0];
+		
 		$params    = $request->getContent();
         $params    = json_decode($params, true);
 
-		$card      = self::newCard($params);
-		$em = $this->doctrine->getManager();
-		$em->persist($card);
-		$seller    = self::getSeller($params);
+		$card   = self::newCard($params);
+		$seller = self::getSeller($params);
+		
+		$em     = $this->doctrine->getManager();
 
-		var_dump($userRoles);;
 		switch ($userRoles) {
 
-			case 'SUPER_ADMIN':
+			case 'ROLE_SUPER_ADMIN':
 				if(!$seller)
 					break;
 
-			case 'ADMIN':
+			default:
+
 				$sellerCardRelation = self::newSellerCardRelation($card, $seller, $params);
 				$em->persist($sellerCardRelation);
 				break;
 		}
-		
+
+		$em->persist($card);
 		$em->flush();
 
 		$result = [
@@ -118,15 +127,16 @@ class CardService Extends BaseService
 		}
 
 		$card = new Card();
+		$card->setColor($params['color']);
+		$card->setCreatedBy($this->currentUser);
+		$card->setEventType($params['event_type']);
+		$card->setImgUrl($params['img_url']);
+		$card->setLanguage($params['language']);
 		$card->setName($params['name']);
+		$card->setReligion($params['religion']);
 		$card->setShape($params['shape']);
 		$card->setSize($params['size']);
-		$card->setEventType($params['event_type']);
-		$card->setColor($params['color']);
-		$card->setLanguage($params['language']);
-		$card->setReligion($params['religion']);
 		$card->setTheme($params['theme']);
-		$card->setImgUrl($params['img_url']);
 
 		if(!$doSave) {
 			return $card;
@@ -134,56 +144,65 @@ class CardService Extends BaseService
 	}
 
 
-	/*
-	 * 
+	/**
+	 * @param [mandatory params to crete seller card relation]
+	 * @param [ROLE_SUPER_ADMIN - Optoinal ]
+	 * @param [ROLE_ADMIN       - seller_id and other params mandatory ]
+	 * @param [ROLE_SELLER      - seller_id will current seller ]
 	 *
+	 * @return [ seller - based on params ]
 	 */
 	public function getSeller($params)
 	{
+		$currentUser      = $this->currentUser;
+		$currentUserRoles = $currentUser->getRoles()[0];
+
 		$validationResult =  self::validateParams($params, self::getMandatorySellerCardParams());
+
 		if(!$validationResult["success"]){
+			if($currentUserRoles == 'ROLE_SUPER_ADMIN') {
+				return null;
+			}
 			throw new BadRequestException($validationResult["result"]);
 		}
 
-		$currentUser = $this->currentUser;
-
-		if(count($currentUser) < 1) {
-			throw new BadRequestException("Invalid User");
-		}
-
-		$currentUserRoles = $currentUser->getRoles()[0];
-
-		$sellerId = $params['seller_id']; // to-do : exception handling for unpassed seller_id
-		
-		if($sellerId) {
+		if($currentUserRoles == 'ROLE_SELLER') {
+			$seller = $this->doctrine->getRepository('CardBundle:Seller')->findOneByUser($currentUser);
+		} elseif($currentUserRoles == 'ROLE_ADMIN') {
+			$sellerId = $params['seller_id'];
 			$seller   = $this->doctrine->getRepository('CardBundle:Seller')->find($sellerId);
 			
 			if(!$seller) {
 				throw new BadRequestException('Invalid param: seller_id passed.');	
 			}
+		} else {
+			throw new BadRequestException('Invalid Request: Not Authorized');	
 		}
-
+		
 		switch ($currentUserRoles) {
 
-			case 'SUPER_ADMIN':
+			case 'ROLE_SUPER_ADMIN':
 				if(!$seller) {
 					return false;
 					break;
 				}
 
-			case 'ADMIN':
+			default:
 				if(!$seller) {
 					throw new BadRequestException('seller_id is mandatory param');
 				}
 
 				return $seller;
 				break;
-			
-			default:
-				return $currentUser;
-				break;
 		}
 	}
+
+	/**
+	 * @param  [card,seller, other params - mandatory]
+	 * @param  [doSave                    - Default False]
+	 * 
+	 * @return [sellerCardRelation instance without save if doSave is false else with save]
+	 */
 
 	public function newSellerCardRelation($card, $seller, $params, $doSave = false)
 	{
@@ -193,10 +212,10 @@ class CardService Extends BaseService
 		$sellerCardRelation->setQuantity($params['quantity']);
 		$sellerCardRelation->setPrice($params['price']);
 		$sellerCardRelation->setPrintAvailable($params['print_available']);
-		$sellerCardRelation->setPrintingCharge(0); //set it from parameter later
-		$sellerCardRelation->setExtraCharge(0); //set it from parameter later
-		$sellerCardRelation->setTaxPercentage(0); //set it from parameter later
-		$sellerCardRelation->setIsActive(1); //set it from parameter later
+		$sellerCardRelation->setPrintingCharge($params['printing_charge']); //set it from parameter later
+		$sellerCardRelation->setExtraCharge($params['extra_charge']); //set it from parameter later
+		$sellerCardRelation->setTaxPercentage($params['tax_percentage']); //set it from parameter later
+		$sellerCardRelation->setIsActive($params['is_active']); //set it from parameter later
 
 		if($doSave) {
 			$em->persist($sellerCardRelation);
@@ -221,7 +240,6 @@ class CardService Extends BaseService
 		}
 		
 		$em      = $this->doctrine->getManager();
-		// $tableName = $em->getClassMetadata('CardBundle:Card')->getColumnName();
 
         $card    = $this->doctrine->getRepository('CardBundle:Card')->find($id);
 
@@ -339,20 +357,19 @@ class CardService Extends BaseService
 	{
 		$validated                     = true;
 		$cardParams                    = array();
+		$cardParams['color']           = getType('abcd');
+		$cardParams['created_by']      = getType(1);
+		$cardParams['event_type']      = getType('abcd');
+		$cardParams['img_url']         = getType([]);
+		$cardParams['language']        = getType('abcd');
 		$cardParams['name']            = gettype('abcd');
 		$cardParams['price']           = getType(20.0);
+		$cardParams['print_available'] = getType(true);
+		$cardParams['quantity']        = getType(1);
+		$cardParams['religion']        = getType('abcd');
 		$cardParams['shape']           = getType('abcd');
 		$cardParams['size']            = getType('abcd');
-		$cardParams['event_type']      = getType('abcd');
-		$cardParams['color']           = getType('abcd');
-		$cardParams['language']        = getType('abcd');
-		$cardParams['religion']        = getType('abcd');
 		$cardParams['theme']           = getType('abcd');
-		$cardParams['created_by']      = getType(1);
-		$cardParams['quantity']        = getType(1);
-		$cardParams['price']           = getType(20);
-		$cardParams['print_available'] = getType(true);
-		$cardParams['img_url']         = getType([]);
 
 		$validationResult     = array();
 		$is_atleast_one_param = false;
@@ -386,29 +403,36 @@ class CardService Extends BaseService
 
 	public function getMandatoryCardParams()
 	{
-		$mandatoryCardParams                    = array();
-		$mandatoryCardParams['name']            = gettype('abcd');
-		$mandatoryCardParams['shape']           = getType('abcd');
-		$mandatoryCardParams['size']            = getType('abcd');
-		$mandatoryCardParams['event_type']      = getType('abcd');
-		$mandatoryCardParams['color']           = getType('abcd');
-		$mandatoryCardParams['language']        = getType('abcd');
-		$mandatoryCardParams['religion']        = getType('abcd');
-		$mandatoryCardParams['theme']           = getType('abcd');
-		$mandatoryCardParams['img_url']         = getType([]);
-		$mandatoryCardParams['created_by']      = getType(1);
-		$mandatoryCardParams['price']           = getType(20);
-		$mandatoryCardParams['print_available'] = getType(true);
-		$mandatoryCardParams['quantity']        = getType(1);
+		$mandatoryCardParams               = array();
+		$mandatoryCardParams['color']      = getType('abcd');
+		$mandatoryCardParams['created_by'] = getType(1);
+		$mandatoryCardParams['event_type'] = getType('abcd');
+		$mandatoryCardParams['img_url']    = getType([]);
+		$mandatoryCardParams['language']   = getType('abcd');
+		$mandatoryCardParams['name']       = gettype('abcd');
+		$mandatoryCardParams['religion']   = getType('abcd');
+		$mandatoryCardParams['shape']      = getType('abcd');
+		$mandatoryCardParams['size']       = getType('abcd');
+		$mandatoryCardParams['theme']      = getType('abcd');
 		return $mandatoryCardParams;
 	}
 
-	public function getMandatorySellerCardParams()
+	public function getMandatorySellerCardParams($incluedSeller = True)
 	{
-		$mandatorySellerCardParams                    = array();
-		$mandatorySellerCardParams['price']           = getType(20);
+		$mandatorySellerCardParams                   = array();
+		$mandatorySellerCardParams['extra_charge']    = getType(20.0);
+		$mandatorySellerCardParams['is_active']       = getType(true);
+		$mandatorySellerCardParams['price']          = getType(20.0);
 		$mandatorySellerCardParams['print_available'] = getType(true);
-		$mandatorySellerCardParams['quantity']        = getType(1);
+		$mandatorySellerCardParams['printing_charge'] = getType(20.0);
+		$mandatorySellerCardParams['quantity']       = getType(1);
+		$mandatorySellerCardParams['tax_percentage']  = getType(20.0);
+
+		$currentUser      = $this->currentUser;
+		$currentUserRoles = $currentUser->getRoles()[0];
+		if($currentUserRoles == 'ROLE_SUPER_ADMIN' || $currentUserRoles == 'ROLE_ADMIN') {
+			$mandatorySellerCardParams['seller_id']       = getType(1);
+		}
 
 		return $mandatorySellerCardParams;
 	}

@@ -27,7 +27,7 @@ class Seller
      * @ORM\JoinColumn(name = "user_id", referencedColumnName = "id")
      *
      */
-    private $User;
+    private $user;
 
     /**
      * @var string

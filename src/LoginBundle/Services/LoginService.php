@@ -107,7 +107,7 @@ class LoginService Extends BaseService
 		$session->set('user', $user);
 
 		$token = new UsernamePasswordToken($user, null, "main", $user->getRoles());
-		var_dump($token);
+		
 		$this->container->get("security.token_storage")->setToken($token);
 	    $event = new InteractiveLoginEvent($newrequest, $token);
 	    $this->container->get("event_dispatcher")->dispatch("security.interactive_login", $event);
