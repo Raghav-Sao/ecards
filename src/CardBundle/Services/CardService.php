@@ -120,7 +120,7 @@ class CardService Extends BaseService
 
 	public function newCard($params, $doSave = false)
 	{
-		$validationResult =  self::validateParams($params, self::getMandatoryCardParams());
+		$validationResult =  $this->validateParams($params, $this->getMandatoryCardParams());
 
 		if(!$validationResult["success"]){
 			throw new BadRequestException($validationResult["result"]);
@@ -157,7 +157,7 @@ class CardService Extends BaseService
 		$currentUser      = $this->currentUser;
 		$currentUserRoles = $currentUser->getRoles()[0];
 
-		$validationResult =  self::validateParams($params, self::getMandatorySellerCardParams());
+		$validationResult =  $this->validateParams($params, $this->getMandatorySellerCardParams());
 
 		if(!$validationResult["success"]){
 			if($currentUserRoles == 'ROLE_SUPER_ADMIN') {
@@ -231,9 +231,7 @@ class CardService Extends BaseService
 
         $request           = json_decode($request, true);
 
-		$validationResult =  self::validateParams($request, self::getMandatoryCardParams());
-
-
+		$validationResult =  $this->validateParams($request, $this->getMandatoryCardParams());
 
 		if(!$validationResult["success"]){
 			return self::getResponse($validationResult);
@@ -305,54 +303,6 @@ class CardService Extends BaseService
         return $response;
 	}
 
-	public function validateParams($data, $mandatoryParams)
-	{
-		$validated        = true;
-		$validationResult = array();
-
-        foreach ($mandatoryParams as $key => $value) {
-        	if(!isset($data[$key]) || $mandatoryParams[$key] != getType($data[$key])){
-        		$validationResult[$key] = $mandatoryParams[$key];
-        	}
-        }
-
-        $result = "";
-        foreach ($validationResult as $key => $value) {
-        	$result .= "$key should be $value,";
-        }
-
-        if(!isset($data['email'])){
-        	$result .= "email is mandatory";
-        }
-        else {
-			$email 			 = $data["email"];
-			$emailConstraint = new Assert\Email();
-		    $emailConstraint->message = 'Invalid email address';
-		    $errorList = $this->validator->validate(
-		        $email,
-		        $emailConstraint
-		    );
-		   
-		    
-		    if (count($errorList)) {
-		    	$errorMessage = $errorList[0]->getMessage();
-		        $errorMessage = $errorList[0]->getMessage();
-		        $result .= "email is invalid";
-		    }
-	    }
-
-	    if($result) {
-	    	$validated = false;
-	    }
-
-	    $validationResult = [
-				"success" => $validated,
-				"result"  => $result
-		];
-
-		return $validationResult;
-	}
-
 	public function validateEditCard($data)
 	{
 		$validated                     = true;
@@ -399,42 +349,6 @@ class CardService Extends BaseService
 				"result"  => $result
 			];
 		return $validationResult;
-	}
-
-	public function getMandatoryCardParams()
-	{
-		$mandatoryCardParams               = array();
-		$mandatoryCardParams['color']      = getType('abcd');
-		$mandatoryCardParams['created_by'] = getType(1);
-		$mandatoryCardParams['event_type'] = getType('abcd');
-		$mandatoryCardParams['img_url']    = getType([]);
-		$mandatoryCardParams['language']   = getType('abcd');
-		$mandatoryCardParams['name']       = gettype('abcd');
-		$mandatoryCardParams['religion']   = getType('abcd');
-		$mandatoryCardParams['shape']      = getType('abcd');
-		$mandatoryCardParams['size']       = getType('abcd');
-		$mandatoryCardParams['theme']      = getType('abcd');
-		return $mandatoryCardParams;
-	}
-
-	public function getMandatorySellerCardParams($incluedSeller = True)
-	{
-		$mandatorySellerCardParams                   = array();
-		$mandatorySellerCardParams['extra_charge']    = getType(20.0);
-		$mandatorySellerCardParams['is_active']       = getType(true);
-		$mandatorySellerCardParams['price']          = getType(20.0);
-		$mandatorySellerCardParams['print_available'] = getType(true);
-		$mandatorySellerCardParams['printing_charge'] = getType(20.0);
-		$mandatorySellerCardParams['quantity']       = getType(1);
-		$mandatorySellerCardParams['tax_percentage']  = getType(20.0);
-
-		$currentUser      = $this->currentUser;
-		$currentUserRoles = $currentUser->getRoles()[0];
-		if($currentUserRoles == 'ROLE_SUPER_ADMIN' || $currentUserRoles == 'ROLE_ADMIN') {
-			$mandatorySellerCardParams['seller_id']       = getType(1);
-		}
-
-		return $mandatorySellerCardParams;
 	}
 }
 
