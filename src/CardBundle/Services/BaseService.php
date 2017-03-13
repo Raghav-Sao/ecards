@@ -33,13 +33,13 @@ class BaseService
 
 	public function getMandatorySellerCardParams($incluedSeller = True)
 	{
-		$mandatorySellerCardParams                   = array();
+		$mandatorySellerCardParams                    = array();
 		$mandatorySellerCardParams['extra_charge']    = getType(20.0);
 		$mandatorySellerCardParams['is_active']       = getType(true);
-		$mandatorySellerCardParams['price']          = getType(20.0);
+		$mandatorySellerCardParams['price']           = getType(20.0);
 		$mandatorySellerCardParams['print_available'] = getType(true);
 		$mandatorySellerCardParams['printing_charge'] = getType(20.0);
-		$mandatorySellerCardParams['quantity']       = getType(1);
+		$mandatorySellerCardParams['quantity']        = getType(1);
 		$mandatorySellerCardParams['tax_percentage']  = getType(20.0);
 
 		$currentUser      = $this->currentUser;
@@ -62,13 +62,32 @@ class BaseService
         	}
         }
 
-        $result = "";
+        $error = "";
         foreach ($validationResult as $key => $value) {
-        	$result .= "$key should be $value,";
+        	$error .= "$key should be $value,";
         }
 
-        if(!isset($data['email'])){
-        	$result .= "email is mandatory";
+        if(isset($mandatoryParams['email'])){
+        	$error .= self::validateEmail($data);
+        }
+
+	    if($error) {
+	    	$validated = false;
+	    }
+
+	    $validationResult = [
+				"success" => $validated,
+				"error"   => $error
+		];
+
+		return $validationResult;
+	}
+
+	public function validateEmail($data) {
+		$error = "";
+
+		if(!isset($data['email'])){
+        	$error .= "email is mandatory";
         }
         else {
 			$email 			 = $data["email"];
@@ -82,20 +101,10 @@ class BaseService
 		    
 		    if (count($errorList)) {
 		    	$errorMessage = $errorList[0]->getMessage();
-		        $errorMessage = $errorList[0]->getMessage();
-		        $result .= "email is invalid";
+		        $error .= "email is invalid";
 		    }
 	    }
 
-	    if($result) {
-	    	$validated = false;
-	    }
-
-	    $validationResult = [
-				"success" => $validated,
-				"result"  => $result
-		];
-
-		return $validationResult;
+	    return $error;
 	}
 }

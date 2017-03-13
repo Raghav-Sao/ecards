@@ -22,15 +22,15 @@ class ExceptionListener
                 "error"      => $exception->__toString(),
             ];
 
-        if ($exception instanceof NotFoundException or $exception instanceof BadRequestException) {
-            $result["extra_info"] = $exception->getExtra();
-            $response =self::getResponse($result, $exception->getCustomCode());
-        } else {
-            $response =self::getResponse($result, Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        // if ($exception instanceof NotFoundException or $exception instanceof BadRequestException) {
+        //     $result["extra_info"] = $exception->getExtra();
+        //     $response =self::getResponse($result, $exception->getCustomCode());
+        // } else {
+        //     $response =self::getResponse($result, Response::HTTP_INTERNAL_SERVER_ERROR);
+        // }
 
-        // Send the modified response object to the event
-        $event->setResponse($response);
+        // // Send the modified response object to the event
+        // $event->setResponse($response);
     }
 
     public function getResponse($data, $code = 500) {

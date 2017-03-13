@@ -78,7 +78,7 @@ class CardService Extends BaseService
 	 */
 	public function newSellerCard(Request $request)
 	{
-		$userRoles = $this->currentUser->getRoles()[0];
+		$userRoles = $this->currentUser->getRoles();
 		
 		$params    = $request->getContent();
         $params    = json_decode($params, true);
@@ -90,12 +90,11 @@ class CardService Extends BaseService
 
 		switch ($userRoles) {
 
-			case 'ROLE_SUPER_ADMIN':
+			case in_array('ROLE_SUPER_ADMIN', $userRoles):
 				if(!$seller)
 					break;
 
 			default:
-
 				$sellerCardRelation = self::newSellerCardRelation($card, $seller, $params);
 				$em->persist($sellerCardRelation);
 				break;
@@ -115,18 +114,78 @@ class CardService Extends BaseService
 		}
 
 		return self::getResponse($result);
-
 	}
 
-	public function newCard($params, $doSave = false)
+	/**
+	 *
+	 * @param  {card} and {seller optional for ROLE_SUPER_ADMIN and self for ROLE_ADMIN} params
+	 * 
+	 * @return return [{card->id} and {seller->id if seller generate else seller->id will not returned}
+	 */
+	public function editSellerCardRelation(int $id, Request $request)
+	{
+		$userRoles = $this->currentUser->getRoles();
+		
+		$params    = $request->getContent();
+		$params    = json_decode($params, true);
+
+		$sellerCardRelation = $this->doctrine->getRepository("CardBundle:SellerCardRelation")->find($id);
+		if(!$sellerCardRelation) {
+			throw new BadRequestException('Invalid Id passed');
+		}
+
+		$seller               = self::getSeller($params);
+		$card                 = $sellerCardRelation->getCard();
+		$sellerCardRelationId = $sellerCardRelation->getId();
+		
+		$em = $this->doctrine->getManager();
+
+		switch ($userRoles) {
+
+			case in_array('ROLE_SUPER_ADMIN', $userRoles):
+				if(!$seller)
+					throw new BadRequestException('Invalid seller_id passed');
+
+			default:
+				$sellerCardRelation = self::newSellerCardRelation($card, $seller, $params, $sellerCardRelation );
+				$em->persist($sellerCardRelation);
+				break;
+		}
+
+		$em->flush();
+
+		$result = [
+			'success' => true,
+			'msg'     => 'Edited product',
+			'cardId'  => $card->getId()
+		];
+
+		if($seller) {
+			$result['sellerCardRelationId'] = $sellerCardRelation->getId();
+		}
+
+		return self::getResponse($result);
+	}
+
+	public function newCard($params, $cardId = "", $doSave = false)
 	{
 		$validationResult =  $this->validateParams($params, $this->getMandatoryCardParams());
 
 		if(!$validationResult["success"]){
-			throw new BadRequestException($validationResult["result"]);
+			throw new BadRequestException($validationResult["error"]);
 		}
 
-		$card = new Card();
+		if($cardId) {
+			$card = $this->doctrine->getRepository('CardBundle:Card')->find($cardId);
+
+			if(!$card) {
+				throw new BadRequestException('Invalid card_id Passsed');
+			}
+
+		} else {
+			$card = new Card();
+		}
+
 		$card->setColor($params['color']);
 		$card->setCreatedBy($this->currentUser);
 		$card->setEventType($params['event_type']);
@@ -138,9 +197,12 @@ class CardService Extends BaseService
 		$card->setSize($params['size']);
 		$card->setTheme($params['theme']);
 
-		if(!$doSave) {
-			return $card;
+		if($doSave) {
+			$em->persist($card);
+			$em->flush();
 		}
+
+		return $card;
 	}
 
 
@@ -154,47 +216,36 @@ class CardService Extends BaseService
 	 */
 	public function getSeller($params)
 	{
-		$currentUser      = $this->currentUser;
-		$currentUserRoles = $currentUser->getRoles()[0];
+		$userRoles        = $this->currentUser->getRoles();
 
 		$validationResult =  $this->validateParams($params, $this->getMandatorySellerCardParams());
 
 		if(!$validationResult["success"]){
-			if($currentUserRoles == 'ROLE_SUPER_ADMIN') {
+			if(in_array('ROLE_SUPER_ADMIN', $userRoles)) {
 				return null;
 			}
-			throw new BadRequestException($validationResult["result"]);
+			throw new BadRequestException($validationResult["error"]);
 		}
 
-		if($currentUserRoles == 'ROLE_SELLER') {
-			$seller = $this->doctrine->getRepository('CardBundle:Seller')->findOneByUser($currentUser);
-		} elseif($currentUserRoles == 'ROLE_ADMIN') {
-			$sellerId = $params['seller_id'];
-			$seller   = $this->doctrine->getRepository('CardBundle:Seller')->find($sellerId);
+		switch ($userRoles) {
+			case in_array('ROLE_SELLER', $userRoles):
+				$seller = $this->doctrine->getRepository('CardBundle:Seller')->findOneByUser($this->currentUser);
+				break;
 			
-			if(!$seller) {
-				throw new BadRequestException('Invalid param: seller_id passed.');	
-			}
-		} else {
-			throw new BadRequestException('Invalid Request: Not Authorized');	
-		}
-		
-		switch ($currentUserRoles) {
-
-			case 'ROLE_SUPER_ADMIN':
-				if(!$seller) {
-					return false;
-					break;
-				}
+			case (in_array('ROLE_SUPER_ADMIN', $userRoles) || in_array('ROLE_ADMIN', $userRoles)):
+				$sellerId = $params['seller_id'];
+				$seller   = $this->doctrine->getRepository('CardBundle:Seller')->find($sellerId);
+				break;
 
 			default:
-				if(!$seller) {
-					throw new BadRequestException('seller_id is mandatory param');
-				}
-
-				return $seller;
-				break;
+				throw new BadRequestException('Invalid Request: Not Authorized');
 		}
+
+		if(!$seller) {
+			throw new BadRequestException('Invalid Seller');
+		}
+
+		return $seller;
 	}
 
 	/**
@@ -204,9 +255,12 @@ class CardService Extends BaseService
 	 * @return [sellerCardRelation instance without save if doSave is false else with save]
 	 */
 
-	public function newSellerCardRelation($card, $seller, $params, $doSave = false)
+	public function newSellerCardRelation($card, $seller, $params, $sellerCardRelation = "", $doSave = false)
 	{
-		$sellerCardRelation = new SellerCardRelation();
+		if(!$sellerCardRelation) {
+			$sellerCardRelation = new SellerCardRelation();
+		}
+
 		$sellerCardRelation->setCard($card);
 		$sellerCardRelation->setSeller($seller);
 		$sellerCardRelation->setQuantity($params['quantity']);

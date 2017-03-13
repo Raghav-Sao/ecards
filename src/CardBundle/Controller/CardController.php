@@ -60,7 +60,7 @@ class CardController extends Controller
      */
     public function editAction($id, Request $request)
     { 
-        $response = $this->container->get('card_bundle.card_service')->editCard($id, $request);
+        $response = $this->container->get('card_bundle.card_service')->editSellerCardRelation($id, $request);
         return $response;   
     }
 
