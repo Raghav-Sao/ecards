@@ -2,8 +2,16 @@
 
 namespace CardBundle\Services;
 use Doctrine\Bundle\DoctrineBundle\Registry as Doctrine;
+use JMS\Serializer\SerializationContext;
 use Symfony\Component\DependencyInjection\ContainerAware;
 use Symfony\Component\Validator\Constraints as Assert;
+use JMS;
+use Symfony\Component\HttpFoundation\Response;
+use AppBundle\Exception\NotFoundException;
+use AppBundle\Exception\BadRequestException;
+
+
+
 
 
 
@@ -13,6 +21,15 @@ class BaseService
 	{
 		$this->doctrine = $doctrine;
 
+	}
+
+	public function checkForAccess($roles = ['ROLE_USER']) {
+		$currentUser = $this->currentUser;
+		var_dump($currentUser instanceof LoginBundle\Entity\User);
+		if(!($currentUser instanceof UserInterface)) {
+			throw new BadRequestException('Invalid Request: Not Authorized');
+			
+		}
 	}
 
 	public function getMandatoryCardParams()
@@ -31,7 +48,7 @@ class BaseService
 		return $mandatoryCardParams;
 	}
 
-	public function getMandatorySellerCardParams($incluedSeller = True)
+	public function getMandatorySellerCardParams()
 	{
 		$mandatorySellerCardParams                    = array();
 		$mandatorySellerCardParams['extra_charge']    = getType(20.0);
@@ -49,6 +66,15 @@ class BaseService
 		}
 
 		return $mandatorySellerCardParams;
+	}
+
+	public function getMandatoryCardSellingParams() {
+		$mandatoryCardSellingParams                            = array();
+		$mandatoryCardSellingParams['seller_card_relation_id'] = getType(2);
+		$mandatoryCardSellingParams['price']                   = getType(20.0);
+		$mandatoryCardSellingParams['quantity']                = getType(20);
+
+		return $mandatoryCardSellingParams;
 	}
 
 	public function validateParams($data, $mandatoryParams)
@@ -106,5 +132,19 @@ class BaseService
 	    }
 
 	    return $error;
+	}
+
+	public function getResponse($data, $group = []) {
+		$serializer  = JMS\Serializer\SerializerBuilder::create()->build();
+
+		array_push($group, "Default");
+
+        $data = $serializer->serialize($data, 'json', SerializationContext::create()->setGroups($group));
+
+        $response    = new Response($data);
+
+        $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
 	}
 }

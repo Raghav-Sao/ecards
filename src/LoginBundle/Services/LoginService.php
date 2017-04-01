@@ -48,7 +48,7 @@ class LoginService Extends BaseService
 			$validationResult = self::validation($request,['email' => "string", "password" => "string"]);
 			
 			if(!$validationResult["success"]){
-				return self::getResponse($validationResult);
+				return $this->getResponse($validationResult);
 			}
 
 			$email    = $request['email'];
@@ -66,7 +66,7 @@ class LoginService Extends BaseService
 				'success' => false,
 				'msg'     => "Invalid Request",
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 
 		$user     = $this->doctrine->getRepository('LoginBundle:User');
@@ -78,7 +78,7 @@ class LoginService Extends BaseService
 				'error'   => "Email is not Registered",
 				'email'   => $email,
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 
 		$isEnabled = $user->isEnabled();
@@ -88,7 +88,7 @@ class LoginService Extends BaseService
 				'error'   => "Email is Registered but not Activate",
 				'email'   => $email,
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 
 		$isValid = $this->container->get('security.password_encoder')->isPasswordValid($user, $password);
@@ -99,7 +99,7 @@ class LoginService Extends BaseService
 				'msg'     => "Wrong Password",
 				'email'   => $email,
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 
 
@@ -120,7 +120,7 @@ class LoginService Extends BaseService
 			'email'   => $email,
 		];
 
-		return self::getResponse($result);
+		return $this->getResponse($result);
 	}
 
 	public function Signup(Request $request)
@@ -143,7 +143,7 @@ class LoginService Extends BaseService
         );
 		
 		if(!$validationResult["success"]){
-			return self::getResponse($validationResult);
+			return $this->getResponse($validationResult);
 		}
 
 		$username      = $request['username'];
@@ -161,7 +161,7 @@ class LoginService Extends BaseService
 				'success' => false,
 				'error'   => "Already User Exist with $email"
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 
 		$userManager = $this->container->get('fos_user.user_manager');
@@ -196,7 +196,7 @@ class LoginService Extends BaseService
 				'id'      => $user->getId(),
 			];
 
-			return self::getResponse($result);
+			return $this->getResponse($result);
         }
 
 		$result       = [
@@ -206,7 +206,7 @@ class LoginService Extends BaseService
 			'id'      => $user->getId(),
 		];
 
-		return self::getResponse($result);
+		return $this->getResponse($result);
 	}
 
 	public function ConfirmSignup($token)
@@ -219,7 +219,7 @@ class LoginService Extends BaseService
 				'success' => false,
 				'msg'     => "Invalid Token",
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 
 		$user->setConfirmationToken(null);
@@ -232,7 +232,7 @@ class LoginService Extends BaseService
 			'success' => True,
 			'msg'     => "Account Verified Successfully",
 		];
-		return self::getResponse($result);
+		return $this->getResponse($result);
 
 	}
 
@@ -258,7 +258,7 @@ class LoginService Extends BaseService
 			'success' => True,
 			'msg'     => "Password Changed Successfully",
 		];
-		return self::getResponse($result);
+		return $this->getResponse($result);
 
 	}
 
@@ -275,7 +275,7 @@ class LoginService Extends BaseService
         );
 
 		if(!$validationResult["success"]){
-			return self::getResponse($validationResult);
+			return $this->getResponse($validationResult);
 		}
 
 		$email            = $request['email'];
@@ -289,7 +289,7 @@ class LoginService Extends BaseService
 				'success' => false,
 				'error'   => "Invalid Email Address"
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 
 		if($confirmationType == 'account_activation' and $user->isEnabled()) {
@@ -297,7 +297,7 @@ class LoginService Extends BaseService
 				'success' => false,
 				'error'   => "Alredy Account Activated"
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 
 		if ($user->getConfirmationToken() === null) {
@@ -322,7 +322,7 @@ class LoginService Extends BaseService
 				'success' => false,
 				'error'   => "Invalid Request"
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
         }
 
 		$this->container->get('fos_user.user_manager')->updateUser($user);
@@ -331,7 +331,7 @@ class LoginService Extends BaseService
 			'success' => true,
 			'error'   => "Confirmation Email Send to $email"
 		];
-		return self::getResponse($result);
+		return $this->getResponse($result);
 	} 
 
 	public function Signout($request)
@@ -345,20 +345,7 @@ class LoginService Extends BaseService
 			"msg"     => "Successfully Signout"
 		];
 
-		return self::getResponse($result);
-	}
-
-
-	public function getResponse($data) {
-		$serializer              = JMS\Serializer\SerializerBuilder::create()->build();
-
-        $data                    = $serializer->serialize($data, 'json');
-
-        $response                = new Response($data);
-
-        $response->headers->set('Content-Type', 'application/json');
-
-        return $response;
+		return $this->getResponse($result);
 	}
 
 	public function validation($request, $requiredParam)

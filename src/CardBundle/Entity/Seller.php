@@ -4,6 +4,9 @@ namespace CardBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
+use JMS\Serializer\Annotation\Exclude;
+use JMS\Serializer\Annotation\Groups;
+
 /**
  * Seller
  *
@@ -22,7 +25,7 @@ class Seller
     private $id;
 
     /**
-     *
+     * @Exclude
      * @ORM\OneToOne(targetEntity = "LoginBundle\Entity\User")
      * @ORM\JoinColumn(name = "user_id", referencedColumnName = "id")
      *
@@ -38,14 +41,14 @@ class Seller
 
     /**
      * @var string
-     *
+     * @Groups({"seller_contact_info"})
      * @ORM\Column(name="email", type="string", length=255)
      */
     private $email;
 
     /**
      * @var string
-     *
+     * @Groups({"seller_contact_info"})
      * @ORM\Column(name="mobile_number", type="string", length=255)
      */
     private $mobileNumber;

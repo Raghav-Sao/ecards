@@ -8,6 +8,7 @@ use AppBundle\Exception\BadRequestException;
 use CardBundle\Entity\Card;
 use CardBundle\Entity\CardImage;
 use CardBundle\Entity\SellerCardRelation;
+use CardBundle\Entity\UserCardRelation;
 
 
 
@@ -30,8 +31,9 @@ class CardService Extends BaseService
 	public function __construct(Doctrine  $doctrine, $validator, $currentUser)
 	{
         parent::__construct($doctrine);
-        $this->validator = $validator;
-        $this->currentUser      = $currentUser;
+        
+		$this->validator   = $validator;
+		$this->currentUser = $currentUser;
 	}
 
 	/**
@@ -58,13 +60,7 @@ class CardService Extends BaseService
 			];
 		}
 
-        $serializer  = JMS\Serializer\SerializerBuilder::create()->build();
-
-        $data        = $serializer->serialize($cards, 'json');
-
-        $response    = new Response($data);
-
-        $response->headers->set('Content-Type', 'application/json');
+        $response    = $this->getResponse($cards, ["Default"]);
 
         return $response;
 	}
@@ -113,7 +109,7 @@ class CardService Extends BaseService
 			$result['sellerCardRelationId'] = $sellerCardRelation->getId();
 		}
 
-		return self::getResponse($result);
+		return $this->getResponse($result);
 	}
 
 	/**
@@ -144,7 +140,7 @@ class CardService Extends BaseService
 
 			case in_array('ROLE_SUPER_ADMIN', $userRoles):
 				if(!$seller)
-					throw new BadRequestException('Invalid seller_id passed');
+					throw new BadRequestException('seller_id is mandatory param');
 
 			default:
 				$sellerCardRelation = self::newSellerCardRelation($card, $seller, $params, $sellerCardRelation );
@@ -164,7 +160,7 @@ class CardService Extends BaseService
 			$result['sellerCardRelationId'] = $sellerCardRelation->getId();
 		}
 
-		return self::getResponse($result);
+		return $this->getResponse($result);
 	}
 
 	public function newCard($params, $cardId = "", $doSave = false)
@@ -266,10 +262,11 @@ class CardService Extends BaseService
 		$sellerCardRelation->setQuantity($params['quantity']);
 		$sellerCardRelation->setPrice($params['price']);
 		$sellerCardRelation->setPrintAvailable($params['print_available']);
-		$sellerCardRelation->setPrintingCharge($params['printing_charge']); //set it from parameter later
-		$sellerCardRelation->setExtraCharge($params['extra_charge']); //set it from parameter later
-		$sellerCardRelation->setTaxPercentage($params['tax_percentage']); //set it from parameter later
-		$sellerCardRelation->setIsActive($params['is_active']); //set it from parameter later
+		$sellerCardRelation->setPrintingCharge($params['printing_charge']);
+		$sellerCardRelation->setExtraCharge($params['extra_charge']);
+		$sellerCardRelation->setTaxPercentage($params['tax_percentage']);
+		$sellerCardRelation->setIsActive($params['is_active']);
+		$sellerCardRelation->setLastUpdatedAt(new \DateTime);
 
 		if($doSave) {
 			$em->persist($sellerCardRelation);
@@ -279,8 +276,10 @@ class CardService Extends BaseService
 		return $sellerCardRelation;
 	}
 
-	public function editCard(int $id, Request $request)
+	public function editCard(int $id, Request $request) //Make history api also
 	{
+		// $this->checkForAccess(['ROLE_SUPER_ADMIN', 'ROLE_SELLER']); //will do
+
 		$request           = $request->getContent();
 
         $request           = json_decode($request, true);
@@ -288,7 +287,7 @@ class CardService Extends BaseService
 		$validationResult =  $this->validateParams($request, $this->getMandatoryCardParams());
 
 		if(!$validationResult["success"]){
-			return self::getResponse($validationResult);
+			return $this->getResponse($validationResult);
 		}
 		
 		$em      = $this->doctrine->getManager();
@@ -300,7 +299,7 @@ class CardService Extends BaseService
 				"success" => false,
 				"msg"     => "invalid card id"
 			];
-			return self::getResponse($result);
+			return $this->getResponse($result);
 		}
 		$card->setName($request['name']);
 		$card->setShape($request['shape']);
@@ -312,97 +311,64 @@ class CardService Extends BaseService
 		$card->setTheme($request['theme']);
 		$card->setImgUrl($request['img_url']);
 
-		$created_by = $this->doctrine->getRepository('CardBundle:Seller')->find($request['created_by']);
-		if(!$created_by) {
-			$result = [
-				"success" => false,
-				"result"  => "Invalid Passed  User"
-			];
-			return self::getResponse($result);
-		}
-
-		$card->setCreatedBy($created_by);
 		$em = $this->doctrine->getManager();
 		$em->persist($card);
-
-        $sellerCardRelation = $this->doctrine->getRepository('CardBundle:SellerCardRelation')->findOneByCard($card);
-		$sellerCardRelation->setSeller($created_by);
-		$sellerCardRelation->setCard($card);
-		$sellerCardRelation->setQuantity($request['quantity']);
-		$sellerCardRelation->setPrice($request['price']);
-		$sellerCardRelation->setPrintAvailable($request['print_available']);
-		$em->persist($sellerCardRelation);
-
 		$em->flush();
 
 		$result = [
 			'success'              => true,
 			'msg'                  => 'Saved product',
-			'cardId'               => $card->getId(),
-			'sellerCardRelationId' => $sellerCardRelation->getId()
+			'cardId'               => $card->getId()
 		];
 
-		return self::getResponse($result);
+		return $this->getResponse($result);
 	}
 
-	public function getResponse($data) {
-		$serializer  = JMS\Serializer\SerializerBuilder::create()->build();
+	public function Cardselling(Request $request) {
+		$request          = $request->getContent();
 
-        $data        = $serializer->serialize($data, 'json');
+        $request          = json_decode($request, true);
 
-        $response    = new Response($data);
+		$validationResult = $this->validateParams($request, $this->getMandatoryCardSellingParams());	
 
-        $response->headers->set('Content-Type', 'application/json');
+		if(!$validationResult["success"]){
+			return $this->getResponse($validationResult);
+		}
 
-        return $response;
-	}
+		$SellerCardRelation = $this->doctrine->getRepository('CardBundle:SellerCardRelation')->find($request['seller_card_relation_id']);
 
-	public function validateEditCard($data)
-	{
-		$validated                     = true;
-		$cardParams                    = array();
-		$cardParams['color']           = getType('abcd');
-		$cardParams['created_by']      = getType(1);
-		$cardParams['event_type']      = getType('abcd');
-		$cardParams['img_url']         = getType([]);
-		$cardParams['language']        = getType('abcd');
-		$cardParams['name']            = gettype('abcd');
-		$cardParams['price']           = getType(20.0);
-		$cardParams['print_available'] = getType(true);
-		$cardParams['quantity']        = getType(1);
-		$cardParams['religion']        = getType('abcd');
-		$cardParams['shape']           = getType('abcd');
-		$cardParams['size']            = getType('abcd');
-		$cardParams['theme']           = getType('abcd');
+		if(!$SellerCardRelation) {
+			throw new BadRequestException('Invalid SellerCardRelation.');
+		}
+		$realPrice = $SellerCardRelation->getPrice();
 
-		$validationResult     = array();
-		$is_atleast_one_param = false;
-        foreach ($cardParams as $key => $value) {
+		if($realPrice != $request['price']) {
+			throw new BadRequestException('Invalid Price.');
+		}
 
-        	if(isset($data[$key])){ 
-        		if($cardParams[$key] != getType($data[$key])){
-        			$validationResult[$key] = $cardParams[$key];
-        		}
-        		$is_atleast_one_param = true;
-        	} 
-        }
-        $result = "";
-        foreach ($validationResult as $key => $value) {
-        	$result .= "$key should be $value,";
-        }
+		$quantity = $SellerCardRelation->getQuantity();
 
-        if (!$is_atleast_one_param) {
-        	$validated = false;
-        	$result .= "at least one param is mandatory";
-        }
-	    if($result) {
-	    	$validated = false;
-	    }
-	    $validationResult = [
-				"success" => $validated,
-				"result"  => $result
-			];
-		return $validationResult;
+		$userCardRelation = new UserCardRelation;
+
+		$userCardRelation->setQuantity($request['quantity']);
+		$userCardRelation->setPrice($realPrice);
+		$userCardRelation->setSellerCardRelation($SellerCardRelation);
+		$userCardRelation->setUser($this->currentUser);
+
+		$em = $this->doctrine->getManager();
+		$em->persist($userCardRelation);
+		$em->flush();
+
+		$result = [
+			'success'              => true,
+			'msg'                  => 'Saved product',
+			'cardId'               => $userCardRelation->getId()
+		];
+
+		return $this->getResponse($result);
+
+
+
 	}
 }
 

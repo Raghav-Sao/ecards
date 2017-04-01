@@ -15,6 +15,11 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  */
 class SellerCardRelation
 {
+    public function __construct()
+    {
+        $this->createdAt          = new \DateTime();
+    }
+
     /**
      * @var int
      *
@@ -85,6 +90,18 @@ class SellerCardRelation
      * @ORM\Column(name="is_active", type="boolean")
      */
     private $isActive;
+
+    /**
+     * @var \DateTime
+     * @ORM\Column(name="created_at", type="datetime")
+     */
+    private $createdAt;
+
+    /**
+     * @var \DateTime
+     * @ORM\Column(name="last_updated_at", type="datetime")
+     */
+    private $lastUpdatedAt;
 
 
     /**
@@ -303,5 +320,53 @@ class SellerCardRelation
     public function getIsActive()
     {
         return $this->isActive;
+    }
+
+    /**
+     * Set createdAt
+     *
+     * @param \DateTime $createdAt
+     *
+     * @return Card
+     */
+    public function setCreatedAt($createdAt)
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    /**
+     * Get createdAt
+     *
+     * @return \DateTime
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * Set lastUpdatedAt
+     *
+     * @param \DateTime $lastUpdatedAt
+     *
+     * @return Card
+     */
+    public function setLastUpdatedAt($lastUpdatedAt)
+    {
+        $this->lastUpdatedAt = $lastUpdatedAt;
+
+        return $this;
+    }
+
+    /**
+     * Get lastUpdatedAt
+     *
+     * @return \DateTime
+     */
+    public function getLastUpdatedAt()
+    {
+        return $this->lastUpdatedAt;
     }
 }

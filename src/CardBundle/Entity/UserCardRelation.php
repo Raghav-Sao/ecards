@@ -14,6 +14,11 @@ use LoginBundle\Entity\User;
  */
 class UserCardRelation
 {
+    public function __construct()
+    {
+        $this->createdAt          = new \DateTime();
+    }
+
     /**
      * @var int
      *
@@ -68,6 +73,18 @@ class UserCardRelation
      */
     private $status;
 
+    /**
+     * @var \DateTime
+     * @ORM\Column(name="created_at", type="datetime")
+     */
+    private $createdAt;
+
+    /**
+     * @var \DateTime
+     * @ORM\Column(name="last_updated_at", type="datetime")
+     */
+    private $lastUpdatedAt;
+
 
     /**
      * Get id
@@ -101,6 +118,54 @@ class UserCardRelation
     public function getPrice()
     {
         return $this->price;
+    }
+
+    /**
+     * Set sellerCardRelation
+     *
+     * @param SellerCardRelation $sellerCardRelation
+     *
+     * @return UserCardRelation
+     */
+    public function setSellerCardRelation($sellerCardRelation)
+    {
+        $this->sellerCardRelation = $sellerCardRelation;
+
+        return $this;
+    }
+
+    /**
+     * Get user
+     *
+     * @return sellerCardRelation
+     */
+    public function getsellerCardRelation()
+    {
+        return $this->sellerCardRelation;
+    }
+
+    /**
+     * Set User
+     *
+     * @param User $user
+     *
+     * @return UserCardRelation
+     */
+    public function setUser($user)
+    {
+        $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * Get user
+     *
+     * @return User
+     */
+    public function getUser()
+    {
+        return $this->user;
     }
 
     /**
@@ -173,6 +238,54 @@ class UserCardRelation
     public function getStatus()
     {
         return $this->status;
+    }
+
+    /**
+     * Set createdAt
+     *
+     * @param \DateTime $createdAt
+     *
+     * @return Card
+     */
+    public function setCreatedAt($createdAt)
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    /**
+     * Get createdAt
+     *
+     * @return \DateTime
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * Set lastUpdatedAt
+     *
+     * @param \DateTime $lastUpdatedAt
+     *
+     * @return Card
+     */
+    public function setLastUpdatedAt($lastUpdatedAt)
+    {
+        $this->lastUpdatedAt = $lastUpdatedAt;
+
+        return $this;
+    }
+
+    /**
+     * Get lastUpdatedAt
+     *
+     * @return \DateTime
+     */
+    public function getLastUpdatedAt()
+    {
+        return $this->lastUpdatedAt;
     }
 }
 

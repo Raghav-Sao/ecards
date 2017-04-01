@@ -22,7 +22,18 @@ card_edit:
     defaults: { _controller: "CardBundle:Card:edit" }
     methods:  [PATCH]
 
+
 card_delete:
     path:     /{id}/delete
     defaults: { _controller: "CardBundle:Card:delete" }
     methods:  DELETE
+
+seller_card_relation_edit:
+    path:     /{id}/edit-seller-card-relation
+    defaults: { _controller: "CardBundle:Card:editSellerCardRelation" }
+    methods:  [PATCH]
+
+card_selling:
+    path:     /card-selling
+    defaults: { _controller: "CardBundle:Card:cardSelling" }
+    methods:  [POST]

@@ -58,10 +58,29 @@ class CardController extends Controller
      * Displays a form to edit an existing card entity.
      *
      */
-    public function editAction($id, Request $request)
+    public function editSellerCardRelationAction($id, Request $request)
     { 
         $response = $this->container->get('card_bundle.card_service')->editSellerCardRelation($id, $request);
         return $response;   
+    }
+
+    /**
+     * Edit Card
+     *
+     */
+    public function editAction($id, Request $request)
+    {
+        $response = $this->container->get('card_bundle.card_service')->editCard($id, $request);
+        return $response;
+    }
+
+    /**
+     * Card Selling
+     *
+     */
+    public function cardSellingAction(Request $request) {
+        $response = $this->container->get('card_bundle.card_service')->Cardselling($request);
+        return $response;
     }
 
     /**

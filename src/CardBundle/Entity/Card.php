@@ -5,6 +5,8 @@ namespace CardBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints as Assert;
+use JMS\Serializer\Annotation\Groups;
+
 
 /**
  * Card
@@ -101,7 +103,7 @@ class Card
     private $imgUrl;
 
     /**
-     *
+     * @Groups({"CardCreatedBy"})
      * @ORM\ManyToOne(targetEntity="LoginBundle\Entity\User")
      * @ORM\JoinColumn(name="created_by", referencedColumnName="id")
      */
@@ -109,7 +111,7 @@ class Card
 
     /**
      * @var \DateTime
-     *
+     * @Groups({"CardCreatedAt"})
      * @ORM\Column(name="created_at", type="datetime")
      */
     private $createdAt;
